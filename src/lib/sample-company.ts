@@ -32,7 +32,7 @@ What we avoid:
 - flashy consumer language
 - vague claims about transformation
 - anthropomorphic AI language
-- anything that sounds unserious in front of a CFO or audit committee
+- anything that would sound unserious in front of a CFO or audit committee
 
 Northstar is especially strong for companies that have grown beyond ad hoc spreadsheets but do not want a heavy, painful platform rollout.
 
@@ -84,8 +84,28 @@ The headline is not automation for its own sake. It is a finance operating syste
   },
 ];
 
-export const SAMPLE_COMPANY = {
+export const EXAMPLE_CASE = {
   id: "northstar-systems",
-  name: "Northstar Systems",
+  companyName: "Northstar Systems",
+  category: "Finance operations software",
+  headline: "A calmer operating layer for monthly close, board reporting, and planning.",
+  description:
+    "This example case is built to feel commercially real: an operating brief, a founder letter, and a sales sequence with a consistent executive-ready voice.",
+  callouts: [
+    "Great for testing positioning, support drafts, investor tone, and prospect replies.",
+    "Shows grounded voice synthesis instead of a generic chat wrapper.",
+    "Loads instantly, no upload step required.",
+  ],
+  instantPrompts: [
+    "Show me how Northstar explains its value proposition to a CFO.",
+    "Draft a measured follow-up email after a finance systems demo.",
+    "What investor-facing tone comes through in this material?",
+  ],
+  sourceLabels: sampleMaterials.map((material) => material.label),
+};
+
+export const SAMPLE_COMPANY = {
+  id: EXAMPLE_CASE.id,
+  name: EXAMPLE_CASE.companyName,
   materials: sampleMaterials,
 };

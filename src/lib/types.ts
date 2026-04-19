@@ -31,6 +31,7 @@ export type SessionPayload = {
   materials: SourceMaterial[];
   chunks: TextChunk[];
   mode: "live" | "demo";
+  sourceType: "sample" | "uploaded";
 };
 
 export type ChatMessage = {
@@ -38,6 +39,7 @@ export type ChatMessage = {
   role: "user" | "assistant";
   content: string;
   references?: SourceReference[];
+  suggestedFollowUps?: string[];
 };
 
 export type SourceReference = {

@@ -9,9 +9,9 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "House Voice",
+  title: "House Voice | Company voice prototyping",
   description:
-    "A local prototype that turns company materials into a live, grounded AI persona demo.",
+    "Session-based company voice prototyping from PDFs and writing samples, with persona synthesis, grounded chat, and a built-in example case.",
 };
 
 export default function RootLayout({

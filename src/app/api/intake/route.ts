@@ -26,7 +26,8 @@ Rules:
 - Keep the tone operator-grade, calm, and commercially useful.
 - Do not use gimmicky language.
 - Keep arrays tight, usually 4 to 6 items.
-- Suggested prompts should be immediately demoable.`;
+- Suggested prompts should be immediately demoable.
+- Writing directives should read like clear instructions or prohibitions, not vague fragments.`;
 
 async function synthesizePersona(materials: SourceMaterial[]) {
   if (!hasGeminiKey()) {
@@ -57,7 +58,10 @@ async function parseMaterials(formData: FormData) {
   const pastedText = (formData.get("pastedText")?.toString() ?? "").trim();
 
   if (useSample) {
-    return [...SAMPLE_COMPANY.materials];
+    return {
+      materials: [...SAMPLE_COMPANY.materials],
+      sourceType: "sample" as const,
+    };
   }
 
   const files = formData
@@ -96,16 +100,19 @@ async function parseMaterials(formData: FormData) {
     });
   }
 
-  return materials;
+  return {
+    materials,
+    sourceType: "uploaded" as const,
+  };
 }
 
 export async function POST(request: Request) {
   const formData = await request.formData();
-  const materials = await parseMaterials(formData);
+  const { materials, sourceType } = await parseMaterials(formData);
 
   if (!materials.length) {
     return NextResponse.json(
-      { error: "Add at least one PDF, some pasted writing, or try the sample company." },
+      { error: "Add at least one PDF, some pasted writing, or try the example case." },
       { status: 400 },
     );
   }
@@ -118,6 +125,7 @@ export async function POST(request: Request) {
     materials,
     chunks,
     mode,
+    sourceType,
   };
 
   return NextResponse.json(payload);
