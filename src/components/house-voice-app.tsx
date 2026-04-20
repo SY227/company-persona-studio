@@ -102,6 +102,7 @@ export function HouseVoiceApp() {
   const [isReplying, setIsReplying] = useState(false);
   const [synthesisStageIndex, setSynthesisStageIndex] = useState(0);
   const [replyStageIndex, setReplyStageIndex] = useState(0);
+  const [runningDotCount, setRunningDotCount] = useState(1);
 
   const hasInputs = files.length > 0 || pastedText.trim().length > 0;
   const isSampleSession = session?.sourceType === "sample";
@@ -157,6 +158,16 @@ export function HouseVoiceApp() {
 
     return () => window.clearInterval(interval);
   }, [isReplying]);
+
+  useEffect(() => {
+    if (!isCreatingSession) return;
+
+    const interval = window.setInterval(() => {
+      setRunningDotCount((current) => (current % 3) + 1);
+    }, 520);
+
+    return () => window.clearInterval(interval);
+  }, [isCreatingSession]);
 
   function scrollToStudio() {
     document.getElementById("studio")?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -232,6 +243,7 @@ export function HouseVoiceApp() {
 
   async function createSession(options?: { useSample?: boolean; prefillPrompt?: string }) {
     setSynthesisStageIndex(0);
+    setRunningDotCount(1);
     setIsCreatingSession(true);
     setNotice(null);
 
@@ -335,6 +347,35 @@ export function HouseVoiceApp() {
     setPastedText("");
     setNotice(null);
   }
+
+  const flowSteps = useMemo(() => {
+    const sourceReady = hasInputs || isCreatingSession || !!session;
+    const runningStep = isCreatingSession ? (synthesisStageIndex < 2 ? "02" : "03") : null;
+    const runningLabel = `Running${".".repeat(isCreatingSession ? runningDotCount : 1)}`;
+
+    return MATERIAL_FLOW_STEPS.map((item) => {
+      let state: "pending" | "running" | "completed" = "pending";
+
+      if (session) {
+        state = "completed";
+      } else if (isCreatingSession) {
+        if (item.step === "01") {
+          state = "completed";
+        } else if (item.step === runningStep) {
+          state = "running";
+        }
+      } else if (sourceReady && item.step === "01") {
+        state = "completed";
+      }
+
+      return {
+        ...item,
+        state,
+        statusLabel:
+          state === "running" ? runningLabel : state === "completed" ? "Completed" : "Pending",
+      };
+    });
+  }, [hasInputs, isCreatingSession, runningDotCount, session, synthesisStageIndex]);
 
   return (
     <div className="min-h-screen bg-[var(--background)] text-slate-950">
@@ -533,31 +574,49 @@ export function HouseVoiceApp() {
                     </div>
                   </div>
 
-                  {MATERIAL_FLOW_STEPS.map(({ step, title, copy, Icon }) => {
-                    const isActive =
-                      (step === "01" && !session && hasInputs && !isCreatingSession) ||
-                      (step === "02" && isCreatingSession) ||
-                      (step === "03" && !!session);
-
+                  {flowSteps.map(({ step, title, copy, Icon, state, statusLabel }) => {
                     return (
                       <div
                         key={step}
                         className={`flex-1 rounded-[1.35rem] border p-3 transition ${
-                          isActive
-                            ? "border-[rgba(24,58,117,0.18)] bg-white shadow-[0_14px_34px_rgba(24,58,117,0.08)]"
-                            : "border-[var(--border)] bg-white/78"
+                          state === "completed"
+                            ? "border-[var(--flow-complete-border)] bg-[var(--flow-complete-bg)] shadow-[0_14px_34px_rgba(24,58,117,0.06)]"
+                            : state === "running"
+                              ? "border-[rgba(24,58,117,0.16)] bg-white shadow-[0_14px_34px_rgba(24,58,117,0.08)]"
+                              : "border-[var(--border)] bg-white/78"
                         }`}
                       >
                         <div className="flex items-start gap-3">
-                          <div className="flex h-8.5 w-8.5 shrink-0 items-center justify-center rounded-2xl bg-[var(--surface-muted)] text-[var(--blue-strong)]">
+                          <div
+                            className={`flex h-8.5 w-8.5 shrink-0 items-center justify-center rounded-2xl text-[var(--blue-strong)] ${
+                              state === "completed"
+                                ? "bg-white/80"
+                                : state === "running"
+                                  ? "bg-[var(--surface-muted)]"
+                                  : "bg-[var(--surface-muted)]"
+                            }`}
+                          >
                             <Icon className="h-4 w-4" />
                           </div>
                           <div className="min-w-0">
-                            <div className="flex items-center gap-2 text-sm font-semibold text-slate-900">
-                              <span className="text-[11px] uppercase tracking-[0.18em] text-slate-400">
-                                {step}
-                              </span>
-                              <span>{title}</span>
+                            <div className="flex items-center justify-between gap-3">
+                              <div className="flex items-center gap-2 text-sm font-semibold text-slate-900">
+                                <span className="text-[11px] uppercase tracking-[0.18em] text-slate-400">
+                                  {step}
+                                </span>
+                                <span>{title}</span>
+                              </div>
+                              <div
+                                className={`text-[11px] font-medium ${
+                                  state === "completed"
+                                    ? "text-[var(--blue-strong)]/70"
+                                    : state === "running"
+                                      ? "flow-running-status text-[var(--blue-strong)]/80"
+                                      : "text-slate-400"
+                                }`}
+                              >
+                                {statusLabel}
+                              </div>
                             </div>
                             <p className="mt-0.5 text-xs leading-5 text-slate-500">{copy}</p>
                           </div>
