@@ -198,18 +198,6 @@ export function HouseVoiceApp() {
     );
   }
 
-  function buildIntroMessage(nextSession: SessionPayload): ChatMessage {
-    return {
-      id: crypto.randomUUID(),
-      role: "assistant",
-      content:
-        nextSession.sourceType === "sample"
-          ? `${nextSession.persona.companyName} is ready. Ask for positioning, investor language, support replies, or a rewrite in its style.`
-          : `${nextSession.persona.companyName} is ready. I distilled the current session materials into a grounded company voice. Ask for messaging, support language, internal explainers, or a rewrite in that style.`,
-      suggestedFollowUps: nextSession.persona.suggestedPrompts.slice(0, 3),
-    };
-  }
-
   async function requestReply(
     activeSession: SessionPayload,
     question: string,
@@ -269,8 +257,7 @@ export function HouseVoiceApp() {
       }
 
       const nextSession = data as SessionPayload;
-      const introMessage = buildIntroMessage(nextSession);
-      const nextMessages = [introMessage];
+      const nextMessages: ChatMessage[] = [];
 
       setSession(nextSession);
       setMessages(nextMessages);
@@ -732,8 +719,26 @@ export function HouseVoiceApp() {
                   </div>
                 )}
 
-                <div className="min-h-[36rem] space-y-5 bg-[rgba(252,253,255,0.82)] px-4 py-5 sm:px-6 sm:py-6">
+                <div
+                  className={`space-y-5 bg-[rgba(252,253,255,0.82)] px-4 py-5 sm:px-6 sm:py-6 ${
+                    messages.length > 0
+                      ? "min-h-[24rem]"
+                      : session
+                        ? "min-h-[16rem]"
+                        : "min-h-[36rem]"
+                  }`}
+                >
                   {messages.length === 0 ? (
+                    session ? (
+                      <div className="rounded-[1.5rem] border border-[var(--border)] bg-white px-5 py-5 shadow-[0_12px_28px_rgba(15,23,42,0.04)]">
+                        <div className="text-sm font-semibold text-slate-950">
+                          {session.persona.companyName} is loaded.
+                        </div>
+                        <p className="mt-1 text-sm leading-6 text-slate-500">
+                          Ask a question or use one of the prompts above to start the conversation.
+                        </p>
+                      </div>
+                    ) : (
                     <div className="flex min-h-[29rem] flex-col items-center justify-center px-5 text-center">
                       <div className="flex h-14 w-14 items-center justify-center rounded-[1.25rem] bg-white text-[var(--blue-strong)] shadow-[0_14px_30px_rgba(15,23,42,0.06)]">
                         <MessageSquareText className="h-6 w-6" />
@@ -767,6 +772,7 @@ export function HouseVoiceApp() {
                         </button>
                       </div>
                     </div>
+                    )
                   ) : (
                     messages.map((message) => <MessageBubble key={message.id} message={message} />)
                   )}
