@@ -18,7 +18,6 @@ import type {
   ChatMessage,
   ChatResponsePayload,
   SessionPayload,
-  SourceReference,
 } from "@/lib/types";
 
 const HERO_POINTS = [
@@ -864,6 +863,10 @@ function MessageBubble({
   message: ChatMessage;
 }) {
   const isAssistant = message.role === "assistant";
+  const groundingLabels =
+    isAssistant && message.references?.length
+      ? Array.from(new Set(message.references.map((reference) => reference.sourceLabel)))
+      : [];
 
   return (
     <div className={`flex ${isAssistant ? "justify-start" : "justify-end"}`}>
@@ -881,16 +884,17 @@ function MessageBubble({
         >
           {message.content}
         </div>
-        {isAssistant && message.references && message.references.length > 0 && (
-          <div className="mt-4 border-t border-slate-100 pt-4">
-            <div className="mb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">
-              Sources
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {message.references.map((reference) => (
-                <SourceChip key={reference.chunkId} reference={reference} />
-              ))}
-            </div>
+        {isAssistant && groundingLabels.length > 0 && (
+          <div className="mt-3 flex flex-wrap items-center gap-2 text-[11px] text-slate-400">
+            <span>Grounded in</span>
+            {groundingLabels.slice(0, 2).map((label) => (
+              <SourceChip key={label} label={label} />
+            ))}
+            {groundingLabels.length > 2 && (
+              <span className="rounded-full border border-slate-200/80 bg-slate-50/80 px-2.5 py-1 text-[11px] text-slate-400">
+                +{groundingLabels.length - 2}
+              </span>
+            )}
           </div>
         )}
       </div>
@@ -898,11 +902,10 @@ function MessageBubble({
   );
 }
 
-function SourceChip({ reference }: { reference: SourceReference }) {
+function SourceChip({ label }: { label: string }) {
   return (
-    <div className="rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs leading-5 text-slate-600">
-      <div className="font-semibold text-slate-900">{reference.sourceLabel}</div>
-      <div className="mt-1 max-w-[18rem]">{reference.quote}</div>
-    </div>
+    <span className="rounded-full border border-slate-200/80 bg-slate-50/80 px-2.5 py-1 text-[11px] text-slate-500">
+      {label}
+    </span>
   );
 }
