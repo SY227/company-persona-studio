@@ -115,12 +115,13 @@ export function HouseVoiceApp() {
       ?.suggestedFollowUps;
 
     if (latestSuggestions?.length) {
-      return latestSuggestions;
+      return latestSuggestions.slice(0, 2);
     }
 
-    return session?.persona.suggestedPrompts?.length
+    return (session?.persona.suggestedPrompts?.length
       ? session.persona.suggestedPrompts
-      : INITIAL_PROMPTS;
+      : INITIAL_PROMPTS
+    ).slice(0, 2);
   }, [messages, session]);
 
   const personaHighlights = useMemo(() => {
