@@ -11,6 +11,8 @@ import { SAMPLE_COMPANY } from "@/lib/sample-company";
 import { createChunks, excerpt, mergeMaterials } from "@/lib/text";
 import type { PersonaProfile, SessionPayload, SourceMaterial } from "@/lib/types";
 
+export const runtime = "nodejs";
+
 const SYNTHESIS_PROMPT = `You are synthesizing a grounded company persona for a live company-facing chatbot demo.
 Return valid JSON with this shape:
 {
@@ -36,6 +38,16 @@ Rules:
 
 function isDevelopment() {
   return process.env.NODE_ENV !== "production";
+}
+
+class PdfExtractionError extends Error {
+  constructor(
+    public readonly filename: string,
+    public readonly cause?: unknown,
+  ) {
+    super(`PDF extraction failed for ${filename}. Check server logs.`);
+    this.name = "PdfExtractionError";
+  }
 }
 
 async function synthesizePersona(materials: SourceMaterial[]) {
@@ -96,7 +108,15 @@ async function parseMaterials(formData: FormData) {
       continue;
     }
 
-    const text = await extractPdfText(Buffer.from(await file.arrayBuffer()));
+    let text = "";
+
+    try {
+      text = await extractPdfText(await file.arrayBuffer());
+    } catch (error) {
+      console.error(`[intake] PDF extraction failed for ${file.name}`);
+      console.error(error);
+      throw new PdfExtractionError(file.name, error);
+    }
 
     if (!text) continue;
 
@@ -127,33 +147,47 @@ async function parseMaterials(formData: FormData) {
 }
 
 export async function POST(request: Request) {
-  const formData = await request.formData();
-  const { materials, sourceType, sourceMode } = await parseMaterials(formData);
+  try {
+    const formData = await request.formData();
+    const { materials, sourceType, sourceMode } = await parseMaterials(formData);
 
-  if (!materials.length) {
+    if (!materials.length) {
+      return NextResponse.json(
+        {
+          error:
+            sourceMode === "paste"
+              ? "Paste some company material or try the example case."
+              : "Add at least one PDF or try the example case.",
+        },
+        { status: 400 },
+      );
+    }
+
+    const chunks = createChunks(materials);
+    const { persona, mode } = await synthesizePersona(materials);
+
+    const payload: SessionPayload = {
+      persona,
+      materials,
+      chunks,
+      mode,
+      sourceType,
+    };
+
+    return NextResponse.json(payload);
+  } catch (error) {
+    if (error instanceof PdfExtractionError) {
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+
+    console.error("[intake] Unhandled intake route failure");
+    console.error(error);
+
     return NextResponse.json(
-      {
-        error:
-          sourceMode === "paste"
-            ? "Paste some company material or try the example case."
-            : "Add at least one PDF or try the example case.",
-      },
-      { status: 400 },
+      { error: "Could not create the live session. Check server logs." },
+      { status: 500 },
     );
   }
-
-  const chunks = createChunks(materials);
-  const { persona, mode } = await synthesizePersona(materials);
-
-  const payload: SessionPayload = {
-    persona,
-    materials,
-    chunks,
-    mode,
-    sourceType,
-  };
-
-  return NextResponse.json(payload);
 }
 
 export function GET() {

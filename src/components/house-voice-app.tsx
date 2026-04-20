@@ -376,10 +376,24 @@ export function HouseVoiceApp() {
         body: formData,
       });
 
-      const data = (await response.json()) as SessionPayload | { error?: string };
+      const rawBody = await response.text();
+      let data: SessionPayload | { error?: string } | null = null;
 
-      if (!response.ok || "error" in data) {
-        throw new Error((data as { error?: string }).error || "Could not create the live session.");
+      try {
+        data = rawBody ? (JSON.parse(rawBody) as SessionPayload | { error?: string }) : null;
+      } catch {
+        const responsePreview = rawBody.trim().slice(0, 180);
+        const previewSuffix = responsePreview ? ` Response preview: ${responsePreview}` : "";
+
+        throw new Error(
+          process.env.NODE_ENV === "development"
+            ? `Intake route returned non-JSON. Check Vercel function logs.${previewSuffix}`
+            : "Intake route returned non-JSON. Check Vercel function logs.",
+        );
+      }
+
+      if (!data || !response.ok || "error" in data) {
+        throw new Error((data as { error?: string } | null)?.error || "Could not create the live session.");
       }
 
       if (sessionRevision !== sessionRevisionRef.current) {
