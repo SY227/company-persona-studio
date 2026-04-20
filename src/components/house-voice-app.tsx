@@ -90,7 +90,7 @@ function toneNote(mode: SessionPayload["mode"] | ChatResponsePayload["mode"] | n
 
 export function HouseVoiceApp() {
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const chatEndRef = useRef<HTMLDivElement>(null);
+  const chatScrollRef = useRef<HTMLDivElement>(null);
   const [files, setFiles] = useState<File[]>([]);
   const [pastedText, setPastedText] = useState("");
   const [session, setSession] = useState<SessionPayload | null>(null);
@@ -136,8 +136,14 @@ export function HouseVoiceApp() {
   }, [session]);
 
   useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
-  }, [messages, isReplying]);
+    const chatScroll = chatScrollRef.current;
+    if (!chatScroll) return;
+
+    chatScroll.scrollTo({
+      top: chatScroll.scrollHeight,
+      behavior: "smooth",
+    });
+  }, [messages.length, isReplying]);
 
   useEffect(() => {
     if (!isCreatingSession) return;
@@ -351,22 +357,21 @@ export function HouseVoiceApp() {
   }
 
   const flowSteps = useMemo(() => {
-    const sourceReady = hasInputs || isCreatingSession || !!session;
-    const runningStep = isCreatingSession ? (synthesisStageIndex < 2 ? "02" : "03") : null;
     const runningLabel = `Running${".".repeat(isCreatingSession ? runningDotCount : 1)}`;
+    const runningStepIndex = isCreatingSession
+      ? Math.min(synthesisStageIndex, MATERIAL_FLOW_STEPS.length - 1)
+      : -1;
 
-    return MATERIAL_FLOW_STEPS.map((item) => {
+    return MATERIAL_FLOW_STEPS.map((item, index) => {
       let state: "pending" | "running" | "completed" = "pending";
 
-      if (session) {
-        state = "completed";
-      } else if (isCreatingSession) {
-        if (item.step === "01") {
+      if (isCreatingSession) {
+        if (index < runningStepIndex) {
           state = "completed";
-        } else if (item.step === runningStep) {
+        } else if (index === runningStepIndex) {
           state = "running";
         }
-      } else if (sourceReady && item.step === "01") {
+      } else if (session) {
         state = "completed";
       }
 
@@ -377,7 +382,7 @@ export function HouseVoiceApp() {
           state === "running" ? runningLabel : state === "completed" ? "Completed" : "Pending",
       };
     });
-  }, [hasInputs, isCreatingSession, runningDotCount, session, synthesisStageIndex]);
+  }, [isCreatingSession, runningDotCount, session, synthesisStageIndex]);
 
   return (
     <div className="min-h-screen bg-[var(--background)] text-slate-950">
@@ -750,23 +755,27 @@ export function HouseVoiceApp() {
 
                 {(messages.length > 0 || isReplying || !session) && (
                   <div
-                    className={`space-y-4 bg-[rgba(252,253,255,0.82)] px-4 py-4 sm:px-6 sm:py-4 ${
-                      messages.length > 0 || isReplying ? "min-h-[14rem]" : "min-h-[4.5rem]"
+                    ref={chatScrollRef}
+                    className={`overflow-y-auto overscroll-contain bg-[rgba(252,253,255,0.82)] px-4 py-4 sm:px-6 sm:py-4 ${
+                      messages.length > 0 || isReplying
+                        ? "min-h-[14rem] max-h-[30rem]"
+                        : "min-h-[4.5rem]"
                     }`}
                   >
-                    {messages.length > 0 && (
-                      messages.map((message) => <MessageBubble key={message.id} message={message} />)
-                    )}
+                    <div className="space-y-4">
+                      {messages.length > 0 && (
+                        messages.map((message) => <MessageBubble key={message.id} message={message} />)
+                      )}
 
-                    {isReplying && (
-                      <div className="flex justify-start">
-                        <div className="inline-flex items-center gap-2 rounded-full border border-[var(--border)] bg-white px-4 py-2 text-sm text-slate-600 shadow-sm">
-                          <LoaderCircle className="h-4 w-4 animate-spin text-[var(--blue-strong)]" />
-                          {REPLY_STAGES[replyStageIndex]}
+                      {isReplying && (
+                        <div className="flex justify-start">
+                          <div className="inline-flex items-center gap-2 rounded-full border border-[var(--border)] bg-white px-4 py-2 text-sm text-slate-600 shadow-sm">
+                            <LoaderCircle className="h-4 w-4 animate-spin text-[var(--blue-strong)]" />
+                            {REPLY_STAGES[replyStageIndex]}
+                          </div>
                         </div>
-                      </div>
-                    )}
-                    <div ref={chatEndRef} />
+                      )}
+                    </div>
                   </div>
                 )}
 
