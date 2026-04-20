@@ -711,8 +711,8 @@ export function HouseVoiceApp() {
 
                 {(messages.length > 0 || isReplying || !session) && (
                   <div
-                    className={`space-y-5 bg-[rgba(252,253,255,0.82)] px-4 py-5 sm:px-6 sm:py-6 ${
-                      messages.length > 0 || isReplying ? "min-h-[24rem]" : "min-h-[4.5rem]"
+                    className={`space-y-4 bg-[rgba(252,253,255,0.82)] px-4 py-4 sm:px-6 sm:py-4 ${
+                      messages.length > 0 || isReplying ? "min-h-[14rem]" : "min-h-[4.5rem]"
                     }`}
                   >
                     {messages.length > 0 && (
