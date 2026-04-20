@@ -417,8 +417,8 @@ export function HouseVoiceApp() {
               </div>
             </div>
 
-            <div className="mt-6 grid gap-6 lg:grid-cols-[1.14fr_0.86fr] lg:items-start">
-              <div className="space-y-6">
+            <div className="mt-6 grid gap-5 lg:grid-cols-[1.14fr_0.86fr] lg:items-stretch">
+              <div className="space-y-5">
                 <div
                   onDragOver={(event) => {
                     event.preventDefault();
@@ -430,23 +430,23 @@ export function HouseVoiceApp() {
                     setIsDragging(false);
                     onFilesSelected(Array.from(event.dataTransfer.files));
                   }}
-                  className={`rounded-[1.6rem] border border-dashed p-6 text-center transition ${
+                  className={`rounded-[1.6rem] border border-dashed p-5 text-center transition ${
                     isDragging
                       ? "border-[var(--blue-strong)] bg-[rgba(239,244,251,0.95)]"
                       : "border-[var(--border)] bg-[var(--surface-muted)]"
                   }`}
                 >
-                  <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-white text-[var(--blue-strong)] shadow-[0_12px_30px_rgba(15,23,42,0.06)]">
-                    <Upload className="h-6 w-6" />
+                  <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-white text-[var(--blue-strong)] shadow-[0_12px_30px_rgba(15,23,42,0.06)]">
+                    <Upload className="h-5 w-5" />
                   </div>
-                  <div className="mt-4 text-lg font-semibold text-slate-900">Drop PDFs here</div>
+                  <div className="mt-3 text-base font-semibold text-slate-900">Drop PDFs here</div>
                   <p className="mt-2 text-sm leading-6 text-slate-600">
                     Multi-file upload is supported. The extractor reads text from each PDF and folds it into the current session.
                   </p>
                   <button
                     type="button"
                     onClick={() => fileInputRef.current?.click()}
-                    className="mt-4 rounded-full border border-[var(--border)] bg-white px-4 py-2 text-sm font-medium text-slate-800 transition hover:border-[var(--blue-strong)] hover:text-[var(--blue-strong)]"
+                    className="mt-3 rounded-full border border-[var(--border)] bg-white px-4 py-2 text-sm font-medium text-slate-800 transition hover:border-[var(--blue-strong)] hover:text-[var(--blue-strong)]"
                   >
                     Choose PDFs
                   </button>
@@ -496,7 +496,7 @@ export function HouseVoiceApp() {
                   </div>
                 )}
 
-                <div className="rounded-[1.6rem] border border-[var(--border)] bg-white p-5">
+                <div className="rounded-[1.6rem] border border-[var(--border)] bg-white p-4">
                   <div className="flex items-center justify-between gap-3">
                     <div className="text-sm font-semibold text-slate-900">Optional pasted material</div>
                     <div className="text-xs text-slate-500">For short writing samples</div>
@@ -505,20 +505,20 @@ export function HouseVoiceApp() {
                     value={pastedText}
                     onChange={(event) => setPastedText(event.target.value)}
                     placeholder="Paste a short company excerpt, email, memo, or brand note."
-                    className="mt-3 min-h-36 w-full rounded-[1.2rem] border border-[var(--border)] bg-[var(--surface-muted)] px-4 py-3 text-sm leading-7 text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-[var(--blue-strong)]"
+                    className="mt-3 min-h-32 w-full rounded-[1.2rem] border border-[var(--border)] bg-[var(--surface-muted)] px-4 py-3 text-sm leading-7 text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-[var(--blue-strong)]"
                   />
                 </div>
 
-                <div className="rounded-[1.6rem] border border-[var(--border)] bg-[linear-gradient(180deg,rgba(239,244,251,0.78),rgba(255,255,255,0.98))] p-5">
-                  <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                <div className="rounded-[1.6rem] border border-[var(--border)] bg-[linear-gradient(180deg,rgba(239,244,251,0.78),rgba(255,255,255,0.98))] p-4">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                     <div>
                       <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
                         Optional example case
                       </div>
-                      <div className="mt-2 text-lg font-semibold tracking-[-0.02em] text-slate-950">
+                      <div className="mt-1.5 text-base font-semibold tracking-[-0.02em] text-slate-950">
                         {EXAMPLE_CASE.companyName}
                       </div>
-                      <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
+                      <p className="mt-1.5 max-w-2xl text-sm leading-6 text-slate-600">
                         {EXAMPLE_CASE.headline} Use it if you want an immediate demo before loading your own source pack.
                       </p>
                     </div>
@@ -539,8 +539,8 @@ export function HouseVoiceApp() {
                 </div>
               </div>
 
-              <div className="space-y-6">
-                <div className="space-y-3 rounded-[1.6rem] border border-[var(--border)] bg-[linear-gradient(180deg,rgba(239,244,251,0.78),rgba(255,255,255,0.96))] p-4">
+              <div className="h-full">
+                <div className="flex h-full flex-col space-y-3 rounded-[1.6rem] border border-[var(--border)] bg-[linear-gradient(180deg,rgba(239,244,251,0.78),rgba(255,255,255,0.96))] p-5">
                   <div className="flex items-center justify-between gap-3 px-1">
                     <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
                       Agentic flow
@@ -563,14 +563,14 @@ export function HouseVoiceApp() {
                     return (
                       <div
                         key={step}
-                        className={`rounded-[1.35rem] border p-4 transition ${
+                        className={`flex-1 rounded-[1.35rem] border p-3.5 transition ${
                           isActive
                             ? "border-[rgba(24,58,117,0.18)] bg-white shadow-[0_14px_34px_rgba(24,58,117,0.08)]"
                             : "border-[var(--border)] bg-white/78"
                         }`}
                       >
                         <div className="flex items-start gap-3">
-                          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-[var(--surface-muted)] text-[var(--blue-strong)]">
+                          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl bg-[var(--surface-muted)] text-[var(--blue-strong)]">
                             <Icon className="h-4 w-4" />
                           </div>
                           <div className="min-w-0">
