@@ -577,11 +577,11 @@ export function HouseVoiceApp() {
                             <Icon className="h-4 w-4" />
                           </div>
                           <div className="min-w-0">
-                            <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">
-                              {step}
-                            </div>
-                            <div className="mt-0.5 text-sm font-semibold text-slate-900">
-                              {title}
+                            <div className="flex items-center gap-2 text-sm font-semibold text-slate-900">
+                              <span className="text-[11px] uppercase tracking-[0.18em] text-slate-400">
+                                {step}
+                              </span>
+                              <span>{title}</span>
                             </div>
                             <p className="mt-0.5 text-xs leading-5 text-slate-500">{copy}</p>
                           </div>
