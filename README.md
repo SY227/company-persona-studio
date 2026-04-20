@@ -32,7 +32,8 @@ This is **not** a production multi-tenant chatbot platform.
    - writing directives
 4. Uses that persona plus retrieved chunks to answer chat questions
 5. Shows lightweight source grounding below assistant replies
-6. Includes a built-in sample company so the demo works immediately
+6. Preserves reply-level live or fallback mode so chat failures are visible during testing
+7. Includes a built-in sample company so the demo works immediately
 
 ## Run locally
 
@@ -74,6 +75,7 @@ If no key is present, the app still runs in a local demo fallback mode so the pr
 - Uploaded text is processed for the current live demo flow.
 - Resetting the session clears the current in-browser demo state.
 - If Gemini is configured, source excerpts are sent to the model to synthesize the persona and generate replies.
+- Assistant replies now carry their own mode badge so you can tell whether a given answer came from live Gemini or the fallback path.
 
 ## Main files
 

@@ -1,4 +1,4 @@
-import type { SourceMaterial, TextChunk } from "@/lib/types";
+import type { PersonaProfile, SourceMaterial, TextChunk } from "@/lib/types";
 
 const STOP_WORDS = new Set([
   "a",
@@ -29,6 +29,44 @@ const STOP_WORDS = new Set([
   "you",
   "your",
 ]);
+
+const CONVERSATIONAL_PATTERNS = [
+  /^(hi|hello|hey|yo|hiya)\b/i,
+  /\bhow are you\b/i,
+  /\bwhat'?s up\b/i,
+  /\bgood (morning|afternoon|evening)\b/i,
+  /^(thanks|thank you)\b/i,
+];
+
+const BROAD_PATTERNS = [
+  /\btell me about\b/i,
+  /\bwhat kind of compan(?:y|ies)\b/i,
+  /\bwho (?:is|are)\b/i,
+  /\bwhat do (?:you|they) do\b/i,
+  /\boverview\b/i,
+  /\bsummar(?:ize|y)\b/i,
+  /\bhow does\b/i,
+  /\bwhat does\b/i,
+  /\bwhy\b/i,
+  /\bpositioning\b/i,
+  /\bvalue proposition\b/i,
+  /\bstyle\b/i,
+  /\bvoice\b/i,
+  /\bpersona\b/i,
+  /\btone\b/i,
+];
+
+const WRITING_PATTERNS = [
+  /\bdraft\b/i,
+  /\bwrite\b/i,
+  /\brewrite\b/i,
+  /\bemail\b/i,
+  /\bfollow-?up\b/i,
+  /\breply\b/i,
+  /\brespond\b/i,
+  /\bmessage\b/i,
+  /\bin this style\b/i,
+];
 
 export function cleanText(text: string) {
   return text.replace(/\u0000/g, "").replace(/\s+/g, " ").trim();
@@ -110,6 +148,37 @@ export function tokenize(text: string) {
     .filter((token) => token && !STOP_WORDS.has(token));
 }
 
+function includesAnyPattern(text: string, patterns: RegExp[]) {
+  return patterns.some((pattern) => pattern.test(text));
+}
+
+function analyzeQuestion(question: string) {
+  const normalized = cleanText(question);
+  const tokens = tokenize(normalized);
+  const lower = normalized.toLowerCase();
+  const conversational = includesAnyPattern(normalized, CONVERSATIONAL_PATTERNS);
+  const writing = includesAnyPattern(normalized, WRITING_PATTERNS);
+  const broad =
+    conversational ||
+    writing ||
+    tokens.length <= 3 ||
+    includesAnyPattern(normalized, BROAD_PATTERNS);
+
+  return {
+    normalized,
+    lower,
+    tokens,
+    conversational,
+    writing,
+    broad,
+  };
+}
+
+function sourceChunkIndex(chunk: TextChunk) {
+  const match = chunk.id.match(/-chunk-(\d+)$/);
+  return Number(match?.[1] ?? Number.MAX_SAFE_INTEGER);
+}
+
 export function rankChunks(query: string, chunks: TextChunk[], limit = 4) {
   const queryTokens = tokenize(query);
   const querySet = new Set(queryTokens);
@@ -134,6 +203,145 @@ export function rankChunks(query: string, chunks: TextChunk[], limit = 4) {
     .filter((entry, index) => entry.score > 0 || index < limit)
     .slice(0, limit)
     .map((entry) => entry.chunk);
+}
+
+export function buildChatContextPack(question: string, chunks: TextChunk[], limit = 8) {
+  if (!chunks.length) return [];
+
+  const questionProfile = analyzeQuestion(question);
+  const sourceOrder = new Map<string, number>();
+  const sourceAnchors = new Map<string, TextChunk>();
+  const sourceBestScore = new Map<string, number>();
+
+  chunks.forEach((chunk, index) => {
+    if (!sourceOrder.has(chunk.sourceId)) {
+      sourceOrder.set(chunk.sourceId, index);
+      sourceAnchors.set(chunk.sourceId, chunk);
+    }
+  });
+
+  const scored = chunks
+    .map((chunk, index) => {
+      const chunkText = chunk.text.toLowerCase();
+      const chunkTokens = tokenize(chunk.text);
+      const chunkSet = new Set(chunkTokens);
+      const sourceIndex = sourceChunkIndex(chunk);
+      const overlap = questionProfile.tokens.reduce(
+        (total, token) => total + (chunkSet.has(token) ? 1 : 0),
+        0,
+      );
+      const mentions = questionProfile.tokens.reduce(
+        (total, token) => total + (chunkText.includes(token) ? 1 : 0),
+        0,
+      );
+      const sourceLabelBonus = questionProfile.tokens.some((token) =>
+        chunk.sourceLabel.toLowerCase().includes(token),
+      )
+        ? 2
+        : 0;
+      const anchorBonus = Math.max(0, 3 - sourceIndex);
+      const overviewBonus =
+        /(value proposition|we help|position|tone|preferred messaging|what we avoid|built|customers want)/i.test(
+          chunk.text,
+        )
+          ? 2
+          : 0;
+
+      let score = overlap * 6 + mentions * 2 + sourceLabelBonus;
+
+      if (questionProfile.broad) {
+        score += anchorBonus + overviewBonus;
+      }
+
+      if (questionProfile.conversational) {
+        score += anchorBonus + 2;
+      }
+
+      if (questionProfile.writing) {
+        score += overviewBonus + 1;
+      }
+
+      sourceBestScore.set(
+        chunk.sourceId,
+        Math.max(sourceBestScore.get(chunk.sourceId) ?? 0, score),
+      );
+
+      return { chunk, score, index, sourceIndex };
+    })
+    .sort((a, b) => {
+      if (b.score !== a.score) return b.score - a.score;
+      if (a.sourceIndex !== b.sourceIndex) return a.sourceIndex - b.sourceIndex;
+      return a.index - b.index;
+    });
+
+  const contextLimit = Math.min(
+    limit,
+    questionProfile.broad || questionProfile.conversational || questionProfile.writing ? 8 : 6,
+  );
+  const chosen = new Map<string, TextChunk>();
+
+  const addChunk = (chunk?: TextChunk) => {
+    if (!chunk || chosen.has(chunk.id) || chosen.size >= contextLimit) return;
+    chosen.set(chunk.id, chunk);
+  };
+
+  const relevantTarget = questionProfile.conversational
+    ? 2
+    : questionProfile.broad || questionProfile.writing
+      ? 4
+      : 5;
+
+  for (const entry of scored) {
+    if (chosen.size >= relevantTarget) break;
+    if (entry.score > 0 || chosen.size < 2) {
+      addChunk(entry.chunk);
+    }
+  }
+
+  const sourcesByPriority = [...sourceAnchors.keys()].sort((left, right) => {
+    const scoreDelta = (sourceBestScore.get(right) ?? 0) - (sourceBestScore.get(left) ?? 0);
+    if (scoreDelta !== 0) return scoreDelta;
+    return (sourceOrder.get(left) ?? 0) - (sourceOrder.get(right) ?? 0);
+  });
+
+  const shouldAddAnchors =
+    questionProfile.broad ||
+    questionProfile.conversational ||
+    questionProfile.writing ||
+    sourceAnchors.size > 1;
+
+  if (shouldAddAnchors) {
+    const anchorSourceLimit = Math.min(
+      sourcesByPriority.length,
+      questionProfile.conversational ? 3 : contextLimit,
+    );
+
+    for (const sourceId of sourcesByPriority.slice(0, anchorSourceLimit)) {
+      addChunk(sourceAnchors.get(sourceId));
+    }
+  }
+
+  for (const entry of scored) {
+    addChunk(entry.chunk);
+  }
+
+  if (!chosen.size) {
+    chunks.slice(0, contextLimit).forEach((chunk) => addChunk(chunk));
+  }
+
+  return [...chosen.values()];
+}
+
+export function formatPersonaContext(persona: PersonaProfile) {
+  return [
+    `Company name: ${persona.companyName}`,
+    `Persona summary: ${persona.voiceSummary}`,
+    `Key traits: ${persona.keyTraits.join(", ") || "None provided"}`,
+    `Tone descriptors: ${persona.toneDescriptors.join(", ") || "None provided"}`,
+    `Writing directives: ${persona.writingDirectives.join(" | ") || "None provided"}`,
+    `Knowledge domains: ${persona.knowledgeDomains.join(", ") || "None provided"}`,
+    `Knowledge summary: ${persona.knowledgeSummary}`,
+  ].join("\n");
 }
 
 export function mergeMaterials(materials: SourceMaterial[], maxChars = 18000) {

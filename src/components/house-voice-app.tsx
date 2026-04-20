@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 
 import { EXAMPLE_CASE } from "@/lib/sample-company";
-import { rankChunks } from "@/lib/text";
+import { buildChatContextPack } from "@/lib/text";
 import type {
   ChatMessage,
   ChatResponsePayload,
@@ -213,7 +213,7 @@ export function HouseVoiceApp() {
     question: string,
     history: ChatMessage[],
   ) {
-    const selectedChunks = rankChunks(question, activeSession.chunks, 4);
+    const selectedChunks = buildChatContextPack(question, activeSession.chunks, 8);
     const response = await fetch("/api/chat", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -238,6 +238,8 @@ export function HouseVoiceApp() {
       content: reply.answer,
       references: reply.references,
       suggestedFollowUps: reply.suggestedFollowUps,
+      mode: reply.mode,
+      debugReason: reply.debugReason,
     };
   }
 
@@ -922,9 +924,21 @@ function MessageBubble({
         >
           {message.content}
         </div>
-        {isAssistant && groundingLabels.length > 0 && (
+        {isAssistant && (
           <div className="mt-3 flex flex-wrap items-center gap-2 text-[11px] text-slate-400">
-            <span>Grounded in</span>
+            {message.mode && (
+              <span
+                className={`rounded-full border px-2.5 py-1 ${
+                  message.mode === "live"
+                    ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                    : "border-amber-200 bg-amber-50 text-amber-700"
+                }`}
+                title={message.debugReason || undefined}
+              >
+                {message.mode === "live" ? "Gemini live" : "Fallback"}
+              </span>
+            )}
+            {groundingLabels.length > 0 && <span>Grounded in</span>}
             {groundingLabels.slice(0, 2).map((label) => (
               <SourceChip key={label} label={label} />
             ))}
@@ -932,6 +946,9 @@ function MessageBubble({
               <span className="rounded-full border border-slate-200/80 bg-slate-50/80 px-2.5 py-1 text-[11px] text-slate-400">
                 +{groundingLabels.length - 2}
               </span>
+            )}
+            {message.debugReason && message.mode === "demo" && (
+              <span className="text-[11px] text-amber-700/90">{message.debugReason}</span>
             )}
           </div>
         )}

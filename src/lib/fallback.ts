@@ -66,7 +66,7 @@ function candidateSentences(chunks: TextChunk[]) {
         .map((sentence) => sentence.trim())
         .filter((sentence) => sentence.length > 40),
     )
-    .slice(0, 12);
+    .slice(0, 16);
 }
 
 function selectRelevantSentences(question: string, chunks: TextChunk[]) {
@@ -74,7 +74,10 @@ function selectRelevantSentences(question: string, chunks: TextChunk[]) {
   const keywords = lowerQuestion.split(/[^a-z0-9]+/).filter((token) => token.length > 3);
   const scored = candidateSentences(chunks).map((sentence) => {
     const lowerSentence = sentence.toLowerCase();
-    const score = keywords.reduce((total, keyword) => total + (lowerSentence.includes(keyword) ? 1 : 0), 0);
+    const score = keywords.reduce(
+      (total, keyword) => total + (lowerSentence.includes(keyword) ? 1 : 0),
+      0,
+    );
     return { sentence, score };
   });
 
@@ -82,10 +85,19 @@ function selectRelevantSentences(question: string, chunks: TextChunk[]) {
   return [...new Set(ranked)].slice(0, 3);
 }
 
+function isConversationalQuestion(question: string) {
+  return /\bhow are you\b|^(hi|hello|hey)\b|\bwhat'?s up\b/i.test(question.trim());
+}
+
+function isWritingRequest(question: string) {
+  return /\bdraft\b|\bwrite\b|\brewrite\b|\bemail\b|\bfollow-?up\b|\breply\b|\brespond\b/i.test(question);
+}
+
 export function answerFallback(
   question: string,
   persona: PersonaProfile,
   selectedChunks: TextChunk[],
+  options?: { debugReason?: string },
 ): ChatResponsePayload {
   const references = selectedChunks.slice(0, 3).map((chunk) => ({
     chunkId: chunk.id,
@@ -96,21 +108,30 @@ export function answerFallback(
   const lowerQuestion = question.toLowerCase();
   const supportingLines = selectRelevantSentences(question, selectedChunks);
   const evidence = supportingLines.join(" ");
+  const personaStyle = persona.toneDescriptors.slice(0, 3).join(", ");
 
-  let answer = `${persona.companyName} would answer in a ${persona.toneDescriptors.slice(0, 3).join(", ")} style.`;
+  let answer = `${persona.companyName} would answer in a ${personaStyle} style.`;
 
-  if (/(value proposition|describe|positioning|summarize)/.test(lowerQuestion)) {
+  if (isConversationalQuestion(question)) {
+    answer = `We're doing well, and we try to show up the same way we operate: ${personaStyle}. ${
+      evidence || persona.knowledgeSummary
+    }`;
+  } else if (isWritingRequest(question)) {
+    answer = `Here is a draft in ${persona.companyName}'s style:\n\n${
+      evidence || persona.knowledgeSummary
+    }\n\nIf you want, I can tighten it for a CFO, prospect, or customer audience.`;
+  } else if (/(value proposition|describe|positioning|summarize)/.test(lowerQuestion)) {
     answer = `${persona.companyName} would frame it this way: ${evidence || persona.knowledgeSummary}`;
-  } else if (/(support|reply|email|respond|draft|write)/.test(lowerQuestion)) {
-    answer = `Here is a draft in ${persona.companyName}'s style:\n\n${evidence || persona.voiceSummary}\n\nIf you want, I can tighten this into a shorter customer-facing reply.`;
   } else if (/(investor|board)/.test(lowerQuestion)) {
-    answer = `${persona.companyName}'s investor tone is measured and operationally focused. ${evidence || persona.knowledgeSummary}`;
+    answer = `${persona.companyName}'s investor tone is measured and operationally focused. ${
+      evidence || persona.knowledgeSummary
+    }`;
   } else if (/(prospect|sales)/.test(lowerQuestion)) {
     answer = `${persona.companyName} would likely say: ${evidence || persona.voiceSummary}`;
   } else if (evidence) {
     answer = `${persona.companyName} would likely answer it this way: ${evidence}`;
   } else {
-    answer = `${persona.companyName} would likely answer in a ${persona.toneDescriptors.slice(0, 3).join(", ")} style. ${persona.knowledgeSummary}`;
+    answer = `${persona.companyName} would likely answer in a ${personaStyle} style. ${persona.knowledgeSummary}`;
   }
 
   return {
@@ -118,5 +139,6 @@ export function answerFallback(
     references,
     suggestedFollowUps: persona.suggestedPrompts.slice(0, 3),
     mode: "demo",
+    debugReason: options?.debugReason,
   };
 }

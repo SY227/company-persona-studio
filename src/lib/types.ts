@@ -1,5 +1,7 @@
 export type MaterialKind = "pdf" | "paste" | "sample";
 
+export type ResponseMode = "live" | "demo";
+
 export type SourceMaterial = {
   id: string;
   label: string;
@@ -30,7 +32,7 @@ export type SessionPayload = {
   persona: PersonaProfile;
   materials: SourceMaterial[];
   chunks: TextChunk[];
-  mode: "live" | "demo";
+  mode: ResponseMode;
   sourceType: "sample" | "uploaded";
 };
 
@@ -40,6 +42,8 @@ export type ChatMessage = {
   content: string;
   references?: SourceReference[];
   suggestedFollowUps?: string[];
+  mode?: ResponseMode;
+  debugReason?: string;
 };
 
 export type SourceReference = {
@@ -52,5 +56,6 @@ export type ChatResponsePayload = {
   answer: string;
   references: SourceReference[];
   suggestedFollowUps: string[];
-  mode: "live" | "demo";
+  mode: ResponseMode;
+  debugReason?: string;
 };

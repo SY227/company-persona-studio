@@ -1,7 +1,11 @@
 import { NextResponse } from "next/server";
 
 import { answerFallback, synthesizeFallback } from "@/lib/fallback";
-import { hasGeminiKey, generateStructuredOutput } from "@/lib/gemini";
+import {
+  generateStructuredOutput,
+  getGeminiDebugReason,
+  hasGeminiKey,
+} from "@/lib/gemini";
 import { extractPdfText } from "@/lib/pdf";
 import { SAMPLE_COMPANY } from "@/lib/sample-company";
 import { createChunks, excerpt, mergeMaterials } from "@/lib/text";
@@ -30,6 +34,10 @@ Rules:
 - Suggested prompts should be immediately demoable.
 - Writing directives should read like clear instructions or prohibitions, not vague fragments.`;
 
+function isDevelopment() {
+  return process.env.NODE_ENV !== "production";
+}
+
 async function synthesizePersona(materials: SourceMaterial[]) {
   if (!hasGeminiKey()) {
     return {
@@ -46,7 +54,12 @@ async function synthesizePersona(materials: SourceMaterial[]) {
     );
 
     return { persona, mode: "live" as const };
-  } catch {
+  } catch (error) {
+    if (isDevelopment()) {
+      console.error(`[intake] Gemini persona synthesis failed: ${getGeminiDebugReason(error)}`);
+      console.error(error);
+    }
+
     return {
       persona: synthesizeFallback(materials),
       mode: "demo" as const,
