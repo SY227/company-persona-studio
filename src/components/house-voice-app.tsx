@@ -600,7 +600,6 @@ export function HouseVoiceApp() {
             )}
           </div>
 
-          {(hasInputs || session) && (
           <div
             id="chat-demo"
             className="rounded-[2rem] border border-[var(--border)] bg-white p-6 shadow-[0_22px_56px_rgba(15,23,42,0.08)]"
@@ -662,6 +661,7 @@ export function HouseVoiceApp() {
                 </div>
               </div>
 
+              {(hasInputs || session) && (
               <div className="mt-6 overflow-hidden rounded-[1.8rem] border border-[var(--border)] bg-[linear-gradient(180deg,rgba(239,244,251,0.74),rgba(252,253,255,0.98))]">
                 <div className="flex flex-col gap-4 border-b border-[var(--border)] px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
                   <div className="flex items-start gap-3">
@@ -773,8 +773,8 @@ export function HouseVoiceApp() {
                   </div>
                 </div>
               </div>
+              )}
           </div>
-          )}
 
           {session && (
             <div className="rounded-[2rem] border border-[var(--border)] bg-white p-6 shadow-[0_18px_50px_rgba(15,23,42,0.06)]">
