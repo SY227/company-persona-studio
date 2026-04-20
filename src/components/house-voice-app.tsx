@@ -385,7 +385,7 @@ export function HouseVoiceApp() {
             <div>
               <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--surface-muted)] px-4 py-2 text-sm text-slate-600 shadow-[0_8px_20px_rgba(24,58,117,0.06)]">
                 <Sparkles className="h-4 w-4 text-[var(--blue-strong)]" />
-                Operator-grade company persona demo, grounded in the source pack.
+                Operator-grade agentic persona engine
               </div>
               <h1 className="max-w-4xl text-5xl font-semibold leading-[1.01] tracking-[-0.05em] text-slate-950 sm:text-6xl">
                 Turn any company documents into a specific persona chatbot in seconds.
