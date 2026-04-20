@@ -600,6 +600,7 @@ export function HouseVoiceApp() {
             )}
           </div>
 
+          {(hasInputs || session) && (
           <div
             id="chat-demo"
             className="rounded-[2rem] border border-[var(--border)] bg-white p-6 shadow-[0_22px_56px_rgba(15,23,42,0.08)]"
@@ -773,6 +774,7 @@ export function HouseVoiceApp() {
                 </div>
               </div>
           </div>
+          )}
 
           {session && (
             <div className="rounded-[2rem] border border-[var(--border)] bg-white p-6 shadow-[0_18px_50px_rgba(15,23,42,0.06)]">
