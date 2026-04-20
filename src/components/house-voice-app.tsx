@@ -536,16 +536,6 @@ export function HouseVoiceApp() {
                       Try example case
                     </button>
                   </div>
-                  <div className="mt-4 flex flex-wrap gap-2">
-                    {EXAMPLE_CASE.sourceLabels.map((label) => (
-                      <span
-                        key={label}
-                        className="rounded-full border border-white bg-white px-3 py-2 text-xs font-medium text-slate-700 shadow-sm"
-                      >
-                        {label}
-                      </span>
-                    ))}
-                  </div>
                 </div>
               </div>
 
