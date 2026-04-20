@@ -7,7 +7,7 @@ import { SAMPLE_COMPANY } from "@/lib/sample-company";
 import { createChunks, excerpt, mergeMaterials } from "@/lib/text";
 import type { PersonaProfile, SessionPayload, SourceMaterial } from "@/lib/types";
 
-const SYNTHESIS_PROMPT = `You are synthesizing a live demo persona for a company-facing chatbot.
+const SYNTHESIS_PROMPT = `You are synthesizing a grounded company persona for a live company-facing chatbot demo.
 Return valid JSON with this shape:
 {
   "companyName": string,
@@ -22,9 +22,10 @@ Return valid JSON with this shape:
 
 Rules:
 - Be truthful. This is not a fine-tuned model.
-- Describe the voice from the source materials only.
+- Describe the company persona and style from the source materials only.
 - Keep the tone operator-grade, calm, and commercially useful.
 - Do not use gimmicky language.
+- Avoid leaning on the word "voice" when "persona," "style," or plain business language is clearer.
 - Keep arrays tight, usually 4 to 6 items.
 - Suggested prompts should be immediately demoable.
 - Writing directives should read like clear instructions or prohibitions, not vague fragments.`;

@@ -24,7 +24,7 @@ type StructuredChatReply = {
   suggestedFollowUps: string[];
 };
 
-const CHAT_PROMPT = `You are writing responses for a live company persona demo.
+const CHAT_PROMPT = `You are writing responses for a live grounded company chat demo.
 Return valid JSON with this shape:
 {
   "answer": string,
@@ -37,7 +37,7 @@ Rules:
 - Stay grounded in the provided source snippets.
 - Do not claim facts that are not present in the snippets or persona summary.
 - Keep the answer concise but useful.
-- If the user asks for writing, write in the company's voice.
+- If the user asks for writing, write in the company's style.
 - citationIds must reference only snippet ids that support the answer.
 - suggestedFollowUps should be short, practical, and optional.`;
 

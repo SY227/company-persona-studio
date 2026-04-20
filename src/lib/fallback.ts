@@ -38,7 +38,7 @@ export function synthesizeFallback(materials: SourceMaterial[]): PersonaProfile 
 
   return {
     companyName,
-    voiceSummary: `${companyName} sounds measured, specific, and commercially practical. The voice avoids hype, stays close to real operating work, and prefers clean business language over novelty claims.`,
+    voiceSummary: `${companyName} comes across as measured, specific, and commercially practical. The company persona avoids hype, stays close to real operating work, and prefers clean business language over novelty claims.`,
     keyTraits: traits,
     knowledgeDomains: domains,
     toneDescriptors: ["calm", "precise", "credible", "useful"],
@@ -51,7 +51,7 @@ export function synthesizeFallback(materials: SourceMaterial[]): PersonaProfile 
     knowledgeSummary: `${companyName} is best described through the uploaded materials rather than generic marketing copy. The strongest themes are ${domains.slice(0, 3).join(", ")} and a consistent preference for clarity over hype.`,
     suggestedPrompts: [
       "How would this company describe its value proposition?",
-      "Write a customer support reply in this voice.",
+      "Write a customer support reply in this style.",
       "Summarize our investor tone.",
       "Answer like our company talking to a prospect.",
     ],
@@ -97,12 +97,12 @@ export function answerFallback(
   const supportingLines = selectRelevantSentences(question, selectedChunks);
   const evidence = supportingLines.join(" ");
 
-  let answer = `${persona.companyName} would answer in a ${persona.toneDescriptors.slice(0, 3).join(", ")} voice.`;
+  let answer = `${persona.companyName} would answer in a ${persona.toneDescriptors.slice(0, 3).join(", ")} style.`;
 
   if (/(value proposition|describe|positioning|summarize)/.test(lowerQuestion)) {
     answer = `${persona.companyName} would frame it this way: ${evidence || persona.knowledgeSummary}`;
   } else if (/(support|reply|email|respond|draft|write)/.test(lowerQuestion)) {
-    answer = `Here is a draft in ${persona.companyName}'s voice:\n\n${evidence || persona.voiceSummary}\n\nIf you want, I can tighten this into a shorter customer-facing reply.`;
+    answer = `Here is a draft in ${persona.companyName}'s style:\n\n${evidence || persona.voiceSummary}\n\nIf you want, I can tighten this into a shorter customer-facing reply.`;
   } else if (/(investor|board)/.test(lowerQuestion)) {
     answer = `${persona.companyName}'s investor tone is measured and operationally focused. ${evidence || persona.knowledgeSummary}`;
   } else if (/(prospect|sales)/.test(lowerQuestion)) {
@@ -110,7 +110,7 @@ export function answerFallback(
   } else if (evidence) {
     answer = `${persona.companyName} would likely answer it this way: ${evidence}`;
   } else {
-    answer = `${persona.companyName} would likely answer in a ${persona.toneDescriptors.slice(0, 3).join(", ")} voice. ${persona.knowledgeSummary}`;
+    answer = `${persona.companyName} would likely answer in a ${persona.toneDescriptors.slice(0, 3).join(", ")} style. ${persona.knowledgeSummary}`;
   }
 
   return {

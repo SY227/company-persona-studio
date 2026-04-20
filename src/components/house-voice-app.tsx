@@ -3,7 +3,6 @@
 import { type ReactNode, useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowUpRight,
-  Building2,
   FileText,
   LoaderCircle,
   MessageSquareText,
@@ -26,48 +25,48 @@ const HERO_POINTS = [
   {
     step: "01",
     title: "Bring a source pack",
-    copy: "Upload live PDFs and paste the writing that already defines how the company sounds.",
+    copy: "Upload PDFs and paste the writing that already defines how the company presents itself.",
   },
   {
     step: "02",
-    title: "Synthesize the voice",
-    copy: "Distill tone, positioning, directives, and knowledge shape from the materials in this session.",
+    title: "Distill the company persona",
+    copy: "Pull out tone, positioning, directives, and knowledge shape from the materials in this session.",
   },
   {
     step: "03",
-    title: "Pressure-test the result",
-    copy: "Run realistic prompts and inspect the source grounding that supports each answer.",
+    title: "Run the chat demo",
+    copy: "Test realistic prompts and inspect the source grounding that supports each answer.",
   },
 ];
 
 const SYNTHESIS_STAGES = [
   "Reading source materials",
-  "Distilling voice and operating posture",
-  "Preparing the grounded chat session",
+  "Distilling company persona and operating posture",
+  "Preparing the grounded chat demo",
 ];
 
 const INITIAL_PROMPTS = [
-  "Summarize the value proposition in the company's voice.",
+  "Summarize the value proposition in the company's style.",
   "Draft a measured follow-up email after a product demo.",
   "What investor-facing tone comes through in the material?",
 ];
 
 const REPLY_STAGES = [
   "Selecting the strongest source excerpts",
-  "Drafting in the synthesized company voice",
+  "Drafting in the grounded company persona",
   "Checking the answer against session context",
 ];
 
 function toneNote(mode: SessionPayload["mode"] | ChatResponsePayload["mode"] | null) {
   if (mode === "live") {
-    return "Live model mode. Persona synthesis and replies are generated from this session's source pack.";
+    return "Live model mode. Persona synthesis and chat replies are generated from this session's source pack.";
   }
 
   if (mode === "demo") {
-    return "Fallback mode. The workflow stays testable without a Gemini key, but replies are local.";
+    return "Fallback mode. The persona and chat stay testable without a Gemini key, but replies are local.";
   }
 
-  return "Session based only. No account model, no database, no claim of fine-tuning.";
+  return "Session only. No accounts, no database, no fine-tuning claim.";
 }
 
 export function HouseVoiceApp() {
@@ -103,6 +102,18 @@ export function HouseVoiceApp() {
       : INITIAL_PROMPTS;
   }, [messages, session]);
 
+  const personaHighlights = useMemo(() => {
+    if (!session) return [];
+
+    return Array.from(
+      new Set([
+        ...session.persona.keyTraits,
+        ...session.persona.toneDescriptors,
+        ...session.persona.writingDirectives,
+      ]),
+    ).slice(0, 8);
+  }, [session]);
+
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
   }, [messages, isReplying]);
@@ -129,6 +140,15 @@ export function HouseVoiceApp() {
 
   function scrollToStudio() {
     document.getElementById("studio")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  function scrollToChatDemo() {
+    window.requestAnimationFrame(() => {
+      document.getElementById("chat-demo")?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    });
   }
 
   function onFilesSelected(nextFiles: File[]) {
@@ -163,8 +183,8 @@ export function HouseVoiceApp() {
       role: "assistant",
       content:
         nextSession.sourceType === "sample"
-          ? `${nextSession.persona.companyName} is loaded as the example case. The voice profile is ready from the operating brief, founder letter, and sales sequence. Ask for positioning, investor tone, support language, or a prospect reply.`
-          : `Voice profile ready. I synthesized how ${nextSession.persona.companyName} tends to sound from the current session materials. Ask for positioning, sales copy, support language, or a rewrite in this voice.`,
+          ? `${nextSession.persona.companyName} is loaded. The company persona is grounded in the operating brief, founder letter, and sales sequence. Ask for positioning, investor tone, support language, or a prospect reply.`
+          : `Grounded company persona ready. I synthesized how ${nextSession.persona.companyName} tends to communicate from the current session materials. Ask for positioning, sales copy, support language, or a rewrite in that style.`,
       suggestedFollowUps: nextSession.persona.suggestedPrompts.slice(0, 3),
     };
   }
@@ -240,7 +260,7 @@ export function HouseVoiceApp() {
         setPastedText("");
       }
 
-      scrollToStudio();
+      scrollToChatDemo();
 
       if (options?.prefillPrompt?.trim()) {
         const question = options.prefillPrompt.trim();
@@ -312,83 +332,48 @@ export function HouseVoiceApp() {
   return (
     <div className="min-h-screen bg-[var(--background)] text-slate-950">
       <div className="mx-auto max-w-7xl px-6 pb-20 pt-6 sm:px-8 lg:px-10">
-        <header className="mb-14 flex flex-col gap-4 rounded-[2rem] border border-[var(--border)] bg-white/88 px-5 py-4 shadow-[0_16px_40px_rgba(15,23,42,0.06)] backdrop-blur sm:flex-row sm:items-center sm:justify-between sm:rounded-full sm:px-6">
-          <div className="flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-full bg-[var(--blue-strong)] text-white shadow-[0_14px_32px_rgba(24,58,117,0.24)]">
-              <Building2 className="h-5 w-5" />
-            </div>
-            <div>
-              <div className="text-sm font-semibold tracking-[0.2em] text-[var(--blue-strong)] uppercase">
-                House Voice
-              </div>
-              <div className="text-sm text-slate-500">
-                Company voice prototyping from real source material
-              </div>
-            </div>
-          </div>
-          <div className="flex flex-wrap items-center gap-2 text-xs font-medium text-slate-500 sm:justify-end">
-            {[
-              "Session based",
-              "Grounded replies",
-              "No auth",
-            ].map((item) => (
-              <span
-                key={item}
-                className="rounded-full border border-[var(--border)] bg-slate-50 px-3 py-2"
-              >
-                {item}
-              </span>
-            ))}
-            <button
-              type="button"
-              onClick={scrollToStudio}
-              className="rounded-full border border-[var(--border)] bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-[var(--blue-strong)] hover:text-[var(--blue-strong)]"
-            >
-              Open studio
-            </button>
-          </div>
-        </header>
-
         <section className="py-4">
-          <div className="max-w-5xl py-2">
-            <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--surface-muted)] px-4 py-2 text-sm text-slate-600 shadow-[0_8px_20px_rgba(24,58,117,0.06)]">
-              <Sparkles className="h-4 w-4 text-[var(--blue-strong)]" />
-              Operator-grade company voice synthesis, grounded in the source pack.
+          <div className="grid max-w-6xl gap-8 py-2 lg:grid-cols-[minmax(0,1fr)_18rem] lg:items-start lg:gap-10">
+            <div>
+              <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--surface-muted)] px-4 py-2 text-sm text-slate-600 shadow-[0_8px_20px_rgba(24,58,117,0.06)]">
+                <Sparkles className="h-4 w-4 text-[var(--blue-strong)]" />
+                Operator-grade company persona demo, grounded in the source pack.
+              </div>
+              <h1 className="max-w-4xl text-5xl font-semibold leading-[1.01] tracking-[-0.05em] text-slate-950 sm:text-6xl">
+                Turn company material into a grounded company chat demo that feels immediately real.
+              </h1>
+              <p className="mt-6 max-w-3xl text-lg leading-8 text-slate-600 sm:text-xl">
+                Bring your own company materials first. This session-based prototype distills a grounded company persona from the source pack, then lets you test it live in chat.
+              </p>
+              <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+                <button
+                  type="button"
+                  onClick={scrollToStudio}
+                  className="inline-flex items-center justify-center rounded-full bg-[var(--blue-strong)] px-6 py-3 text-sm font-semibold text-white shadow-[0_18px_44px_rgba(24,58,117,0.24)] transition hover:bg-[var(--blue-deep)]"
+                >
+                  Bring my own materials
+                  <ArrowUpRight className="ml-2 h-4 w-4" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => void createSession({ useSample: true })}
+                  disabled={isCreatingSession}
+                  className="inline-flex items-center justify-center rounded-full border border-[var(--border)] bg-white px-6 py-3 text-sm font-semibold text-slate-800 transition hover:border-[var(--blue-strong)] hover:text-[var(--blue-strong)] disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {isCreatingSession ? (
+                    <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
+                  ) : (
+                    <Sparkles className="mr-2 h-4 w-4" />
+                  )}
+                  Try example case
+                </button>
+              </div>
+              <p className="mt-4 max-w-2xl text-sm leading-6 text-slate-500">
+                Need a quick walkthrough first? The example case is still available, but it stays secondary to the main bring-your-own-materials flow.
+              </p>
             </div>
-            <h1 className="max-w-4xl text-5xl font-semibold leading-[1.01] tracking-[-0.05em] text-slate-950 sm:text-6xl">
-              Turn company material into a grounded voice prototype that feels demo-ready.
-            </h1>
-            <p className="mt-6 max-w-3xl text-lg leading-8 text-slate-600 sm:text-xl">
-              Bring your own company materials first. This session-based prototype synthesizes a working voice profile from the source pack, then lets you test grounded replies against the same material.
-            </p>
-            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-              <button
-                type="button"
-                onClick={scrollToStudio}
-                className="inline-flex items-center justify-center rounded-full bg-[var(--blue-strong)] px-6 py-3 text-sm font-semibold text-white shadow-[0_18px_44px_rgba(24,58,117,0.24)] transition hover:bg-[var(--blue-deep)]"
-              >
-                Bring my own materials
-                <ArrowUpRight className="ml-2 h-4 w-4" />
-              </button>
-              <button
-                type="button"
-                onClick={() => void createSession({ useSample: true })}
-                disabled={isCreatingSession}
-                className="inline-flex items-center justify-center rounded-full border border-[var(--border)] bg-white px-6 py-3 text-sm font-semibold text-slate-800 transition hover:border-[var(--blue-strong)] hover:text-[var(--blue-strong)] disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                {isCreatingSession ? (
-                  <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
-                ) : (
-                  <Sparkles className="mr-2 h-4 w-4" />
-                )}
-                Try example case
-              </button>
-            </div>
-            <p className="mt-4 max-w-2xl text-sm leading-6 text-slate-500">
-              Need a quick walkthrough first? The example case is still available, but it stays secondary to the main bring-your-own-materials flow.
-            </p>
 
-            <div className="mt-10 grid gap-4 sm:grid-cols-3">
+            <div className="space-y-4 lg:pt-1">
               {HERO_POINTS.map((point) => (
                 <div
                   key={point.step}
@@ -405,7 +390,12 @@ export function HouseVoiceApp() {
           </div>
         </section>
 
-        <section id="studio" className="mt-20 grid gap-8 lg:grid-cols-[0.94fr_1.06fr]">
+        <section
+          id="studio"
+          className={`mt-0 grid gap-8 ${
+            session ? "lg:grid-cols-[0.82fr_1.18fr]" : "lg:grid-cols-[0.94fr_1.06fr]"
+          }`}
+        >
           <div className="space-y-6">
 
             <div className="rounded-[2rem] border border-[var(--border)] bg-white p-6 shadow-[0_18px_50px_rgba(15,23,42,0.06)]">
@@ -418,7 +408,7 @@ export function HouseVoiceApp() {
                     Upload PDFs or paste company writing
                   </h2>
                   <p className="mt-2 text-sm leading-6 text-slate-600">
-                    Use decks, brand guidelines, founder notes, customer emails, internal explainers, or support macros. Everything here stays scoped to this live session.
+                    Use decks, brand guidelines, founder notes, customer emails, internal explainers, or support macros. Everything here stays scoped to this session.
                   </p>
                 </div>
                 <div className="rounded-full border border-[var(--border)] bg-slate-50 px-3 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
@@ -450,7 +440,7 @@ export function HouseVoiceApp() {
                   Drop PDFs here
                 </div>
                 <p className="mt-2 text-sm leading-6 text-slate-600">
-                  Multi-file upload is supported. The extractor reads text from each PDF and folds it into the current voice session.
+                  Multi-file upload is supported. The extractor reads text from each PDF and folds it into the current session.
                 </p>
                 <button
                   type="button"
@@ -574,7 +564,7 @@ export function HouseVoiceApp() {
                   ) : (
                     <Sparkles className="mr-2 h-4 w-4" />
                   )}
-                  Synthesize voice and open chat
+                  Build grounded chat demo
                 </button>
               </div>
 
@@ -590,7 +580,7 @@ export function HouseVoiceApp() {
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                   <div>
                     <div className="text-sm font-semibold tracking-[0.18em] text-[var(--blue-strong)] uppercase">
-                      Synthesis summary
+                      Company persona
                     </div>
                     <h3 className="mt-2 text-2xl font-semibold tracking-[-0.03em] text-slate-950">
                       {session.persona.companyName}
@@ -605,17 +595,33 @@ export function HouseVoiceApp() {
                   </div>
                 </div>
 
-                <div className="mt-5 grid gap-3 sm:grid-cols-3">
-                  <SummaryStat label="Sources" value={String(session.materials.length)} />
-                  <SummaryStat label="Grounded chunks" value={String(session.chunks.length)} />
-                  <SummaryStat
-                    label="Session type"
-                    value={isSampleSession ? "Guided sample" : "Uploaded materials"}
-                  />
+                <div className="mt-5 rounded-[1.6rem] border border-[var(--border)] bg-slate-50 p-4 text-sm leading-6 text-slate-700">
+                  <span className="font-semibold text-slate-900">Session snapshot. </span>
+                  Grounded to {session.materials.length} source{session.materials.length === 1 ? "" : "s"} and {session.chunks.length} retrieved excerpt{session.chunks.length === 1 ? "" : "s"} in this session. No fine-tuning or saved company profile.
                 </div>
 
-                <div className="mt-5 rounded-[1.6rem] border border-[var(--border)] bg-slate-50 p-4">
-                  <div className="text-sm font-semibold text-slate-900">Source pack</div>
+                <div className="mt-5 rounded-[1.6rem] border border-[var(--border)] bg-white p-4">
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="text-sm font-semibold text-slate-900">What carries through</div>
+                    <div className="text-xs text-slate-500">Compact summary</div>
+                  </div>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {personaHighlights.map((item) => (
+                      <span
+                        key={item}
+                        className="rounded-full border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-medium text-slate-700"
+                      >
+                        {item}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="mt-5 rounded-[1.6rem] border border-[var(--border)] bg-[var(--surface-muted)] p-4">
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="text-sm font-semibold text-slate-900">Source pack</div>
+                    <div className="text-xs text-slate-500">{session.materials.length} items</div>
+                  </div>
                   <div className="mt-3 flex flex-wrap gap-2">
                     {session.materials.map((material) => (
                       <span
@@ -627,37 +633,39 @@ export function HouseVoiceApp() {
                     ))}
                   </div>
                 </div>
-
-                <div className="mt-6 grid gap-4 sm:grid-cols-2">
-                  <MetricGroup title="Key traits" items={session.persona.keyTraits} />
-                  <MetricGroup title="Knowledge domains" items={session.persona.knowledgeDomains} />
-                  <MetricGroup title="Tone descriptors" items={session.persona.toneDescriptors} />
-                  <MetricGroup title="Writing directives" items={session.persona.writingDirectives} />
-                </div>
-
-                <div className="mt-5 rounded-[1.6rem] bg-[var(--surface-muted)] p-4 text-sm leading-6 text-slate-700">
-                  <span className="font-semibold text-slate-900">Knowledge summary. </span>
-                  {session.persona.knowledgeSummary}
-                </div>
               </div>
             )}
           </div>
 
           <div className="space-y-6">
-            <div className="rounded-[2rem] border border-[var(--border)] bg-white p-6 shadow-[0_18px_50px_rgba(15,23,42,0.06)]">
+            <div
+              id="chat-demo"
+              className="rounded-[2rem] border border-[var(--border)] bg-white p-6 shadow-[0_22px_56px_rgba(15,23,42,0.08)]"
+            >
               <div className="flex flex-col gap-4 border-b border-[var(--border)] pb-5 sm:flex-row sm:items-start sm:justify-between">
                 <div>
                   <div className="text-sm font-semibold tracking-[0.18em] text-[var(--blue-strong)] uppercase">
-                    Grounded voice session
+                    Grounded company chat
                   </div>
                   <h2 className="mt-2 text-2xl font-semibold tracking-[-0.03em] text-slate-950">
                     {session
                       ? `Chat with ${session.persona.companyName}`
-                      : "The live voice session appears here"}
+                      : "The live company chat appears here"}
                   </h2>
                   <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
-                    Ask for positioning, support replies, investor language, internal explanation, or prospect-facing writing. Replies stay tied to the current session and surface source grounding underneath.
+                    {session
+                      ? "Ask for positioning, support replies, investor language, internal explainers, or prospect-facing writing. Keep pushing until the persona either proves itself or breaks."
+                      : "Build a session on the left, then test the chatbot here."}
                   </p>
+                  {session && (
+                    <div className="mt-4 flex flex-wrap gap-2">
+                      <CompactTag>{session.mode === "live" ? "Live model" : "Local fallback"}</CompactTag>
+                      <CompactTag>{session.materials.length} sources</CompactTag>
+                      <CompactTag>{session.chunks.length} grounded excerpts</CompactTag>
+                      <CompactTag>Session based</CompactTag>
+                      <CompactTag>No fine-tuning</CompactTag>
+                    </div>
+                  )}
                 </div>
                 <div className="flex flex-wrap gap-2">
                   <button
@@ -685,37 +693,39 @@ export function HouseVoiceApp() {
                 </div>
               </div>
 
-              <div className="mt-5 flex flex-wrap gap-2">
-                {suggestedPrompts.map((prompt) => (
-                  <button
-                    key={prompt}
-                    type="button"
-                    disabled={isReplying || isCreatingSession}
-                    onClick={() => {
-                      if (!session) {
-                        void createSession({ useSample: true, prefillPrompt: prompt });
-                        return;
-                      }
-                      void sendMessage(prompt);
-                    }}
-                    className="rounded-full border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700 transition hover:border-[var(--blue-strong)] hover:bg-white hover:text-[var(--blue-strong)] disabled:cursor-not-allowed disabled:opacity-50"
-                  >
-                    {prompt}
-                  </button>
-                ))}
-              </div>
+              {session && (
+                <div className="mt-5 flex flex-wrap gap-2">
+                  {suggestedPrompts.map((prompt) => (
+                    <button
+                      key={prompt}
+                      type="button"
+                      disabled={isReplying || isCreatingSession}
+                      onClick={() => {
+                        if (!session) {
+                          void createSession({ useSample: true, prefillPrompt: prompt });
+                          return;
+                        }
+                        void sendMessage(prompt);
+                      }}
+                      className="rounded-full border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700 transition hover:border-[var(--blue-strong)] hover:bg-white hover:text-[var(--blue-strong)] disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      {prompt}
+                    </button>
+                  ))}
+                </div>
+              )}
 
-              <div className="mt-6 space-y-4 rounded-[1.7rem] bg-[var(--surface-muted)] p-4">
+              <div className="mt-6 min-h-[32rem] space-y-4 rounded-[1.7rem] bg-[var(--surface-muted)] p-4">
                 {messages.length === 0 ? (
                   <div className="rounded-[1.5rem] border border-dashed border-slate-300 bg-white px-5 py-10 text-center">
                     <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-[var(--surface-muted)] text-[var(--blue-strong)]">
                       <MessageSquareText className="h-5 w-5" />
                     </div>
                     <div className="mt-4 text-lg font-semibold text-slate-900">
-                      Bring in a source pack to open the grounded chat session.
+                      Your company chat demo opens here.
                     </div>
                     <p className="mt-2 mx-auto max-w-xl text-sm leading-6 text-slate-500">
-                      Upload your own material to test the core workflow. If you only want a quick walkthrough, the example case is still available as a secondary path.
+                      Load your own material for the main path, or use the example case for a quick pass through the experience.
                     </p>
                     <div className="mt-5 flex flex-col justify-center gap-3 sm:flex-row">
                       <button
@@ -772,7 +782,7 @@ export function HouseVoiceApp() {
                   }}
                   placeholder={
                     session
-                      ? "Ask for a rewrite, positioning answer, support reply, or investor-facing explanation."
+                      ? "Ask for a rewrite, positioning answer, support reply, or investor note."
                       : "Load a session to unlock the grounded chat composer."
                   }
                   disabled={!session || isReplying}
@@ -795,51 +805,9 @@ export function HouseVoiceApp() {
               </div>
             </div>
 
-            <div className="rounded-[2rem] border border-[var(--border)] bg-white p-6 shadow-[0_18px_50px_rgba(15,23,42,0.06)]">
-              <div className="text-sm font-semibold tracking-[0.18em] text-[var(--blue-strong)] uppercase">
-                Product framing
-              </div>
-              <h3 className="mt-2 text-2xl font-semibold tracking-[-0.03em] text-slate-950">
-                Built to demonstrate company voice prototyping, not a generic chat shell
-              </h3>
-              <div className="mt-5 grid gap-4 sm:grid-cols-2">
-                {[
-                  [
-                    "Grounded persona synthesis",
-                    "The app derives tone, traits, directives, and knowledge domains from the session source pack.",
-                  ],
-                  [
-                    "Truthful product language",
-                    "It does not imply fine-tuning, persistence, accounts, or hidden product infrastructure that is not present.",
-                  ],
-                  [
-                    "Useful operator prompts",
-                    "The best prompts are practical: sales replies, support language, internal explainers, positioning, and investor tone.",
-                  ],
-                  [
-                    "Low-friction demo path",
-                    "A polished example case makes the whole flow testable in seconds without uploads or setup.",
-                  ],
-                ].map(([title, copy]) => (
-                  <div key={title} className="rounded-2xl bg-[var(--surface-muted)] p-4">
-                    <div className="text-base font-semibold text-slate-900">{title}</div>
-                    <p className="mt-2 text-sm leading-6 text-slate-600">{copy}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
           </div>
         </section>
       </div>
-    </div>
-  );
-}
-
-function SummaryStat({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-2xl border border-[var(--border)] bg-slate-50 p-4">
-      <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">{label}</div>
-      <div className="mt-2 text-2xl font-semibold tracking-[-0.03em] text-slate-950">{value}</div>
     </div>
   );
 }
@@ -852,21 +820,11 @@ function Pill({ children }: { children: ReactNode }) {
   );
 }
 
-function MetricGroup({ title, items }: { title: string; items: string[] }) {
+function CompactTag({ children }: { children: ReactNode }) {
   return (
-    <div className="rounded-[1.5rem] border border-[var(--border)] bg-slate-50 p-4">
-      <div className="text-sm font-semibold text-slate-900">{title}</div>
-      <div className="mt-3 flex flex-wrap gap-2">
-        {items.map((item) => (
-          <span
-            key={item}
-            className="rounded-full border border-white bg-white px-3 py-2 text-xs font-medium text-slate-700 shadow-sm"
-          >
-            {item}
-          </span>
-        ))}
-      </div>
-    </div>
+    <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-medium text-slate-700">
+      {children}
+    </span>
   );
 }
 
@@ -892,7 +850,7 @@ function MessageBubble({
           isAssistant ? "text-slate-500" : "text-white/70"
         }`}
       >
-        {isAssistant ? "Grounded reply" : "Prompt"}
+        {isAssistant ? "Grounded answer" : "Prompt"}
       </div>
       <div
         className={`whitespace-pre-wrap text-sm leading-7 ${
