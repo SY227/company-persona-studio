@@ -433,7 +433,7 @@ export function HouseVoiceApp() {
                       : "border-[var(--border)] bg-[var(--surface-muted)]"
                   }`}
                 >
-                  <div className="flex flex-col gap-3 text-left sm:flex-row sm:items-center sm:justify-between">
+                  <div className="flex flex-col gap-3 text-left sm:flex-row sm:items-start sm:justify-between">
                     <div className="flex items-start gap-3">
                       <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-white text-[var(--blue-strong)] shadow-[0_12px_30px_rgba(15,23,42,0.06)]">
                         <Upload className="h-4.5 w-4.5" />
@@ -448,7 +448,7 @@ export function HouseVoiceApp() {
                     <button
                       type="button"
                       onClick={() => fileInputRef.current?.click()}
-                      className="rounded-full border border-[var(--border)] bg-white px-4 py-2 text-sm font-medium text-slate-800 transition hover:border-[var(--blue-strong)] hover:text-[var(--blue-strong)]"
+                      className="rounded-full border border-[var(--border)] bg-white px-4 py-2 text-sm font-medium whitespace-nowrap text-slate-800 transition hover:border-[var(--blue-strong)] hover:text-[var(--blue-strong)] sm:mt-0.5 sm:shrink-0"
                     >
                       Choose PDFs
                     </button>
@@ -529,7 +529,7 @@ export function HouseVoiceApp() {
                       type="button"
                       onClick={() => void createSession({ useSample: true })}
                       disabled={isCreatingSession}
-                      className="inline-flex items-center justify-center rounded-full border border-[var(--border)] bg-white px-4 py-2 text-sm font-semibold text-slate-800 transition hover:border-[var(--blue-strong)] hover:text-[var(--blue-strong)] disabled:cursor-not-allowed disabled:opacity-60"
+                      className="inline-flex items-center justify-center rounded-full border border-[var(--border)] bg-white px-4 py-2 text-sm font-semibold whitespace-nowrap text-slate-800 transition hover:border-[var(--blue-strong)] hover:text-[var(--blue-strong)] disabled:cursor-not-allowed disabled:opacity-60 sm:mt-0.5 sm:shrink-0"
                     >
                       {isCreatingSession ? (
                         <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
