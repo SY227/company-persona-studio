@@ -398,10 +398,10 @@ export function HouseVoiceApp() {
                   Bring your own materials
                 </div>
                 <h2 className="mt-2 text-2xl font-semibold tracking-[-0.03em] text-slate-950">
-                  Upload PDFs or paste company writing
+                  Upload PDFs or add company material
                 </h2>
                 <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">
-                  Use decks, brand guidelines, founder notes, customer emails, internal explainers, or support macros. Everything here stays scoped to this session.
+                  Use decks, brand guidelines, founder notes, customer emails, internal explainers, support macros, or compact pasted writing. Everything here stays scoped to this session.
                 </p>
               </div>
               <div className="rounded-full border border-[var(--border)] bg-slate-50 px-3 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
@@ -409,7 +409,7 @@ export function HouseVoiceApp() {
               </div>
             </div>
 
-            <div className="mt-6 grid gap-6 lg:grid-cols-[1.02fr_0.98fr] lg:items-start">
+            <div className="mt-6 grid gap-6 lg:grid-cols-[1.14fr_0.86fr] lg:items-start">
               <div className="space-y-6">
                 <div
                   onDragOver={(event) => {
@@ -488,6 +488,19 @@ export function HouseVoiceApp() {
                   </div>
                 )}
 
+                <div className="rounded-[1.6rem] border border-[var(--border)] bg-white p-5">
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="text-sm font-semibold text-slate-900">Optional pasted material</div>
+                    <div className="text-xs text-slate-500">For short writing samples</div>
+                  </div>
+                  <textarea
+                    value={pastedText}
+                    onChange={(event) => setPastedText(event.target.value)}
+                    placeholder="Paste a short company excerpt, email, memo, or brand note."
+                    className="mt-3 min-h-36 w-full rounded-[1.2rem] border border-[var(--border)] bg-[var(--surface-muted)] px-4 py-3 text-sm leading-7 text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-[var(--blue-strong)]"
+                  />
+                </div>
+
                 <div className="rounded-[1.6rem] border border-[var(--border)] bg-[linear-gradient(180deg,rgba(239,244,251,0.78),rgba(255,255,255,0.98))] p-5">
                   <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                     <div>
@@ -529,49 +542,25 @@ export function HouseVoiceApp() {
               </div>
 
               <div className="space-y-6">
-                <div>
-                  <div className="mb-3 flex items-center justify-between gap-3">
-                    <div className="text-sm font-semibold text-slate-900">Paste writing samples</div>
-                    <div className="text-xs text-slate-500">
-                      Useful for emails, founder notes, brand language, and support replies
-                    </div>
-                  </div>
-                  <textarea
-                    value={pastedText}
-                    onChange={(event) => setPastedText(event.target.value)}
-                    placeholder={`Paste company-side writing here. Good inputs include:\n\n• product or positioning copy\n• founder letters or memos\n• sales emails\n• support macros\n• investor or board language`}
-                    className="min-h-[26rem] w-full rounded-[1.5rem] border border-[var(--border)] bg-white px-5 py-4 text-sm leading-7 text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-[var(--blue-strong)]"
-                  />
-                </div>
-
-                <div className="rounded-[1.6rem] border border-[var(--border)] bg-slate-50 p-5">
-                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                    <p className="max-w-2xl text-sm leading-6 text-slate-500">
-                      {isCreatingSession ? SYNTHESIS_STAGES[synthesisStageIndex] : toneNote(session?.mode ?? null)}
-                    </p>
-                    <button
-                      type="button"
-                      disabled={!hasInputs || isCreatingSession}
-                      onClick={() => void createSession()}
-                      className="inline-flex items-center justify-center rounded-full bg-[var(--blue-strong)] px-5 py-3 text-sm font-semibold text-white shadow-[0_16px_40px_rgba(24,58,117,0.2)] transition hover:bg-[var(--blue-deep)] disabled:cursor-not-allowed disabled:opacity-50"
-                    >
-                      {isCreatingSession ? (
-                        <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
-                      ) : (
-                        <Sparkles className="mr-2 h-4 w-4" />
-                      )}
-                      Build grounded chat demo
-                    </button>
-                  </div>
-
-                  {notice && (
-                    <div className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-                      {notice}
-                    </div>
-                  )}
+                <div className="rounded-[1.6rem] border border-[var(--border)] bg-slate-50 p-5 text-sm leading-6 text-slate-600">
+                  <div className="font-semibold text-slate-900">Next step</div>
+                  <p className="mt-2">
+                    Add materials here, then build the grounded chat in the section below.
+                  </p>
+                  <p className="mt-3 text-xs text-slate-500">
+                    {isCreatingSession
+                      ? SYNTHESIS_STAGES[synthesisStageIndex]
+                      : "Once the source pack is ready, launch the chat demo below."}
+                  </p>
                 </div>
               </div>
             </div>
+
+            {notice && (
+              <div className="mt-6 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+                {notice}
+              </div>
+            )}
           </div>
 
           <div
@@ -604,6 +593,21 @@ export function HouseVoiceApp() {
                   )}
                 </div>
                 <div className="flex flex-wrap gap-2">
+                  {!session && hasInputs && (
+                    <button
+                      type="button"
+                      disabled={isCreatingSession}
+                      onClick={() => void createSession()}
+                      className="inline-flex items-center rounded-full bg-[var(--blue-strong)] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[var(--blue-deep)] disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      {isCreatingSession ? (
+                        <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
+                      ) : (
+                        <Sparkles className="mr-2 h-4 w-4" />
+                      )}
+                      Build grounded chat demo
+                    </button>
+                  )}
                   <button
                     type="button"
                     onClick={resetSession}
