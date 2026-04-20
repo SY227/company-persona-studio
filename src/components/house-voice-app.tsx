@@ -116,7 +116,9 @@ function sameFiles(currentFiles: File[], nextFiles: File[]) {
 export function HouseVoiceApp() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const chatScrollRef = useRef<HTMLDivElement>(null);
+  const composerRef = useRef<HTMLTextAreaElement>(null);
   const sessionRevisionRef = useRef(0);
+  const shouldFocusComposerRef = useRef(false);
   const [files, setFiles] = useState<File[]>([]);
   const [pastedText, setPastedText] = useState("");
   const [sourceInputMode, setSourceInputMode] = useState<SourceInputMode>("files");
@@ -205,6 +207,17 @@ export function HouseVoiceApp() {
 
     return () => window.clearInterval(interval);
   }, [isCreatingSession]);
+
+  useEffect(() => {
+    if (!session || isCreatingSession || !shouldFocusComposerRef.current) return;
+
+    const frame = window.requestAnimationFrame(() => {
+      composerRef.current?.focus({ preventScroll: true });
+      shouldFocusComposerRef.current = false;
+    });
+
+    return () => window.cancelAnimationFrame(frame);
+  }, [isCreatingSession, session]);
 
   function scrollToStudio() {
     document.getElementById("studio")?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -376,6 +389,7 @@ export function HouseVoiceApp() {
       const nextSession = data as SessionPayload;
       const nextMessages: ChatMessage[] = [];
 
+      shouldFocusComposerRef.current = !options?.prefillPrompt?.trim();
       setSession(nextSession);
       setMessages(nextMessages);
       setChatInput("");
@@ -945,8 +959,14 @@ export function HouseVoiceApp() {
                 )}
 
                 <div className={`${session && messages.length === 0 && !isReplying ? "" : "border-t border-[var(--border)]"} bg-white/88 px-4 py-4 sm:px-6`}>
+                  {session && messages.length === 0 && !isReplying && (
+                    <div className="px-2 pb-3 text-xs font-medium text-slate-500">
+                      Source pack ready. Ask your first question.
+                    </div>
+                  )}
                   <div className="rounded-[1.5rem] border border-[var(--border)] bg-white p-3 shadow-[0_12px_28px_rgba(15,23,42,0.04)]">
                     <textarea
+                      ref={composerRef}
                       value={chatInput}
                       onChange={(event) => setChatInput(event.target.value)}
                       onKeyDown={(event) => {
@@ -955,11 +975,7 @@ export function HouseVoiceApp() {
                           void sendMessage();
                         }
                       }}
-                      placeholder={
-                        session
-                          ? "Ask about positioning, sales replies, support language, or internal narratives."
-                          : "Load a session to unlock the grounded composer."
-                      }
+                      placeholder={session ? "Ask anything" : "Load a session to unlock the grounded composer."}
                       disabled={!session || isReplying}
                       className="min-h-28 w-full resize-none border-0 bg-transparent px-2 py-2 text-sm leading-7 text-slate-800 outline-none placeholder:text-slate-400 disabled:cursor-not-allowed"
                     />
