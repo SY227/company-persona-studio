@@ -1,13 +1,13 @@
 # House Voice
 
-House Voice is a local Next.js prototype for turning company PDFs and writing samples into a grounded company chatbot demo.
+House Voice is a local Next.js prototype for turning company PDFs and pasted material into a premium, session-based grounded company chat experience.
 
 It is intentionally scoped as a fast session-based prototype:
 - upload PDFs
 - paste writing samples
 - distill a company persona from the material
-- chat with answers grounded in the uploaded material
-- try a polished sample company instantly
+- launch a grounded company chat with visible source backing
+- optionally try a polished sample company instantly
 
 This is **not** a production multi-tenant chatbot platform.
 
@@ -87,8 +87,8 @@ If no key is present, the app still runs in a local demo fallback mode so the pr
 
 ## Quality bar checklist
 
-- Value is obvious quickly from the hero and input flow
-- The chat demo is the main payoff after synthesis
-- Sample path makes the demo usable with zero setup
+- Value is obvious quickly from the hero and materials flow
+- The chat experience is the main payoff after synthesis
+- Sample path stays optional and secondary
 - Messaging stays truthful about what the system is doing
-- Chat feels grounded through visible source references
+- Chat feels grounded through visible, quiet source references

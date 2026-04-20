@@ -39,6 +39,27 @@ const HERO_POINTS = [
   },
 ];
 
+const MATERIAL_FLOW_STEPS = [
+  {
+    step: "01",
+    title: "Ingest materials",
+    copy: "PDFs and pasted writing enter one live session.",
+    Icon: Upload,
+  },
+  {
+    step: "02",
+    title: "Distill company persona",
+    copy: "Tone, posture, and directives are synthesized from the source pack.",
+    Icon: Sparkles,
+  },
+  {
+    step: "03",
+    title: "Launch grounded chat",
+    copy: "The session opens a source-backed company chat you can pressure test immediately.",
+    Icon: MessageSquareText,
+  },
+];
+
 const SYNTHESIS_STAGES = [
   "Reading source materials",
   "Distilling company persona and operating posture",
@@ -59,14 +80,14 @@ const REPLY_STAGES = [
 
 function toneNote(mode: SessionPayload["mode"] | ChatResponsePayload["mode"] | null) {
   if (mode === "live") {
-    return "Live model mode. Persona synthesis and chat replies are generated from this session's source pack.";
+    return "Live model, grounded to the current session.";
   }
 
   if (mode === "demo") {
-    return "Fallback mode. The persona and chat stay testable without a Gemini key, but replies are local.";
+    return "Fallback mode, still grounded to the current session.";
   }
 
-  return "Session only. No accounts, no database, no fine-tuning claim.";
+  return "Session based only.";
 }
 
 export function HouseVoiceApp() {
@@ -183,8 +204,8 @@ export function HouseVoiceApp() {
       role: "assistant",
       content:
         nextSession.sourceType === "sample"
-          ? `${nextSession.persona.companyName} is loaded. The company persona is grounded in the operating brief, founder letter, and sales sequence. Ask for positioning, investor tone, support language, or a prospect reply.`
-          : `Grounded company persona ready. I synthesized how ${nextSession.persona.companyName} tends to communicate from the current session materials. Ask for positioning, sales copy, support language, or a rewrite in that style.`,
+          ? `${nextSession.persona.companyName} is ready. Ask for positioning, investor language, support replies, or a rewrite in its style.`
+          : `${nextSession.persona.companyName} is ready. I distilled the current session materials into a grounded company voice. Ask for messaging, support language, internal explainers, or a rewrite in that style.`,
       suggestedFollowUps: nextSession.persona.suggestedPrompts.slice(0, 3),
     };
   }
@@ -542,16 +563,52 @@ export function HouseVoiceApp() {
               </div>
 
               <div className="space-y-6">
-                <div className="rounded-[1.6rem] border border-[var(--border)] bg-slate-50 p-5 text-sm leading-6 text-slate-600">
-                  <div className="font-semibold text-slate-900">Next step</div>
-                  <p className="mt-2">
-                    Add materials here, then build the grounded chat in the section below.
-                  </p>
-                  <p className="mt-3 text-xs text-slate-500">
-                    {isCreatingSession
-                      ? SYNTHESIS_STAGES[synthesisStageIndex]
-                      : "Once the source pack is ready, launch the chat demo below."}
-                  </p>
+                <div className="space-y-3 rounded-[1.6rem] border border-[var(--border)] bg-[linear-gradient(180deg,rgba(239,244,251,0.78),rgba(255,255,255,0.96))] p-4">
+                  <div className="flex items-center justify-between gap-3 px-1">
+                    <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                      Agentic flow
+                    </div>
+                    <div className="text-[11px] text-slate-500">
+                      {isCreatingSession
+                        ? SYNTHESIS_STAGES[synthesisStageIndex]
+                        : session
+                          ? "Chat live"
+                          : "Session scoped"}
+                    </div>
+                  </div>
+
+                  {MATERIAL_FLOW_STEPS.map(({ step, title, copy, Icon }) => {
+                    const isActive =
+                      (step === "01" && !session && hasInputs && !isCreatingSession) ||
+                      (step === "02" && isCreatingSession) ||
+                      (step === "03" && !!session);
+
+                    return (
+                      <div
+                        key={step}
+                        className={`rounded-[1.35rem] border p-4 transition ${
+                          isActive
+                            ? "border-[rgba(24,58,117,0.18)] bg-white shadow-[0_14px_34px_rgba(24,58,117,0.08)]"
+                            : "border-[var(--border)] bg-white/78"
+                        }`}
+                      >
+                        <div className="flex items-start gap-3">
+                          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-[var(--surface-muted)] text-[var(--blue-strong)]">
+                            <Icon className="h-4 w-4" />
+                          </div>
+                          <div className="min-w-0">
+                            <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">
+                              {step}
+                            </div>
+                            <div className="mt-1 text-sm font-semibold text-slate-900">
+                              {title}
+                            </div>
+                            <p className="mt-1 text-xs leading-5 text-slate-500">{copy}</p>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             </div>
@@ -567,7 +624,7 @@ export function HouseVoiceApp() {
             id="chat-demo"
             className="rounded-[2rem] border border-[var(--border)] bg-white p-6 shadow-[0_22px_56px_rgba(15,23,42,0.08)]"
           >
-              <div className="flex flex-col gap-4 border-b border-[var(--border)] pb-5 sm:flex-row sm:items-start sm:justify-between">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
                 <div>
                   <div className="text-sm font-semibold tracking-[0.18em] text-[var(--blue-strong)] uppercase">
                     Grounded company chat
@@ -575,22 +632,13 @@ export function HouseVoiceApp() {
                   <h2 className="mt-2 text-2xl font-semibold tracking-[-0.03em] text-slate-950">
                     {session
                       ? `Chat with ${session.persona.companyName}`
-                      : "The live company chat appears here"}
+                      : "The chat opens here"}
                   </h2>
                   <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
                     {session
-                      ? "Ask for positioning, support replies, investor language, internal explainers, or prospect-facing writing. Keep pushing until the persona either proves itself or breaks."
-                      : "Build a session on the left, then test the chatbot here."}
+                      ? "Ask directly. The conversation stays grounded in the current session materials."
+                      : "Load a source pack, then start the conversation here."}
                   </p>
-                  {session && (
-                    <div className="mt-4 flex flex-wrap gap-2">
-                      <CompactTag>{session.mode === "live" ? "Live model" : "Local fallback"}</CompactTag>
-                      <CompactTag>{session.materials.length} sources</CompactTag>
-                      <CompactTag>{session.chunks.length} grounded excerpts</CompactTag>
-                      <CompactTag>Session based</CompactTag>
-                      <CompactTag>No fine-tuning</CompactTag>
-                    </div>
-                  )}
                 </div>
                 <div className="flex flex-wrap gap-2">
                   {!session && hasInputs && (
@@ -605,7 +653,7 @@ export function HouseVoiceApp() {
                       ) : (
                         <Sparkles className="mr-2 h-4 w-4" />
                       )}
-                      Build grounded chat demo
+                      Launch grounded chat
                     </button>
                   )}
                   <button
@@ -633,114 +681,143 @@ export function HouseVoiceApp() {
                 </div>
               </div>
 
-              {session && (
-                <div className="mt-5 flex flex-wrap gap-2">
-                  {suggestedPrompts.map((prompt) => (
-                    <button
-                      key={prompt}
-                      type="button"
-                      disabled={isReplying || isCreatingSession}
-                      onClick={() => {
-                        if (!session) {
-                          void createSession({ useSample: true, prefillPrompt: prompt });
-                          return;
-                        }
-                        void sendMessage(prompt);
-                      }}
-                      className="rounded-full border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700 transition hover:border-[var(--blue-strong)] hover:bg-white hover:text-[var(--blue-strong)] disabled:cursor-not-allowed disabled:opacity-50"
-                    >
-                      {prompt}
-                    </button>
-                  ))}
-                </div>
-              )}
-
-              <div className="mt-6 min-h-[32rem] space-y-4 rounded-[1.7rem] bg-[var(--surface-muted)] p-4">
-                {messages.length === 0 ? (
-                  <div className="rounded-[1.5rem] border border-dashed border-slate-300 bg-white px-5 py-10 text-center">
-                    <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-[var(--surface-muted)] text-[var(--blue-strong)]">
+              <div className="mt-6 overflow-hidden rounded-[1.8rem] border border-[var(--border)] bg-[linear-gradient(180deg,rgba(239,244,251,0.74),rgba(252,253,255,0.98))]">
+                <div className="flex flex-col gap-4 border-b border-[var(--border)] px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+                  <div className="flex items-start gap-3">
+                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-white text-[var(--blue-strong)] shadow-[0_12px_28px_rgba(15,23,42,0.06)]">
                       <MessageSquareText className="h-5 w-5" />
                     </div>
-                    <div className="mt-4 text-lg font-semibold text-slate-900">
-                      Your company chat demo opens here.
-                    </div>
-                    <p className="mt-2 mx-auto max-w-xl text-sm leading-6 text-slate-500">
-                      Load your own material for the main path, or use the example case for a quick pass through the experience.
-                    </p>
-                    <div className="mt-5 flex flex-col justify-center gap-3 sm:flex-row">
-                      <button
-                        type="button"
-                        onClick={scrollToStudio}
-                        className="inline-flex items-center justify-center rounded-full bg-[var(--blue-strong)] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[var(--blue-deep)]"
-                      >
-                        Go to inputs
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => void createSession({ useSample: true })}
-                        disabled={isCreatingSession}
-                        className="inline-flex items-center justify-center rounded-full border border-[var(--border)] bg-white px-5 py-3 text-sm font-semibold text-slate-800 transition hover:border-[var(--blue-strong)] hover:text-[var(--blue-strong)] disabled:cursor-not-allowed disabled:opacity-60"
-                      >
-                        {isCreatingSession ? (
-                          <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
-                        ) : (
-                          <Sparkles className="mr-2 h-4 w-4" />
-                        )}
-                        Try example case
-                      </button>
+                    <div>
+                      <div className="text-base font-semibold text-slate-950">
+                        {session ? `${session.persona.companyName} chat` : "Grounded chat"}
+                      </div>
+                      <p className="mt-1 text-sm text-slate-600">
+                        {session
+                          ? `${session.materials.length} source${session.materials.length === 1 ? "" : "s"} in scope, with visible grounding on every answer.`
+                          : "Session-based answers grounded in PDFs and pasted material."}
+                      </p>
                     </div>
                   </div>
-                ) : (
-                  messages.map((message) => (
-                    <MessageBubble
-                      key={message.id}
-                      message={message}
-                      onFollowUp={(prompt) => void sendMessage(prompt)}
-                      disabled={isReplying}
+                  <div className="flex flex-wrap gap-2">
+                    <CompactTag>{session ? (session.mode === "live" ? "Live model" : "Local fallback") : "Session based"}</CompactTag>
+                    <CompactTag>{session ? `${session.chunks.length} excerpts` : "No persistence"}</CompactTag>
+                    {session && <CompactTag>No fine-tuning</CompactTag>}
+                  </div>
+                </div>
+
+                {session && (
+                  <div className="flex flex-col gap-3 border-b border-[var(--border)] px-4 py-4 sm:px-6">
+                    <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+                      Suggested prompts
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {suggestedPrompts.map((prompt) => (
+                        <button
+                          key={prompt}
+                          type="button"
+                          disabled={isReplying || isCreatingSession}
+                          onClick={() => {
+                            if (!session) {
+                              void createSession({ useSample: true, prefillPrompt: prompt });
+                              return;
+                            }
+                            void sendMessage(prompt);
+                          }}
+                          className="rounded-full border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 transition hover:border-[var(--blue-strong)] hover:text-[var(--blue-strong)] disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                          {prompt}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <div className="min-h-[36rem] space-y-5 bg-[rgba(252,253,255,0.82)] px-4 py-5 sm:px-6 sm:py-6">
+                  {messages.length === 0 ? (
+                    <div className="flex min-h-[29rem] flex-col items-center justify-center px-5 text-center">
+                      <div className="flex h-14 w-14 items-center justify-center rounded-[1.25rem] bg-white text-[var(--blue-strong)] shadow-[0_14px_30px_rgba(15,23,42,0.06)]">
+                        <MessageSquareText className="h-6 w-6" />
+                      </div>
+                      <div className="mt-5 text-2xl font-semibold tracking-[-0.03em] text-slate-950">
+                        Open a grounded company chat.
+                      </div>
+                      <p className="mt-3 max-w-xl text-sm leading-6 text-slate-500">
+                        Bring your own materials for the main path, or use the example case for a quick pass through the interaction.
+                      </p>
+                      <div className="mt-6 flex flex-col justify-center gap-3 sm:flex-row">
+                        <button
+                          type="button"
+                          onClick={scrollToStudio}
+                          className="inline-flex items-center justify-center rounded-full bg-[var(--blue-strong)] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[var(--blue-deep)]"
+                        >
+                          Add materials
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => void createSession({ useSample: true })}
+                          disabled={isCreatingSession}
+                          className="inline-flex items-center justify-center rounded-full border border-[var(--border)] bg-white px-5 py-3 text-sm font-semibold text-slate-800 transition hover:border-[var(--blue-strong)] hover:text-[var(--blue-strong)] disabled:cursor-not-allowed disabled:opacity-60"
+                        >
+                          {isCreatingSession ? (
+                            <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
+                          ) : (
+                            <Sparkles className="mr-2 h-4 w-4" />
+                          )}
+                          Try example case
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    messages.map((message) => <MessageBubble key={message.id} message={message} />)
+                  )}
+
+                  {isReplying && (
+                    <div className="flex justify-start">
+                      <div className="inline-flex items-center gap-2 rounded-full border border-[var(--border)] bg-white px-4 py-2 text-sm text-slate-600 shadow-sm">
+                        <LoaderCircle className="h-4 w-4 animate-spin text-[var(--blue-strong)]" />
+                        {REPLY_STAGES[replyStageIndex]}
+                      </div>
+                    </div>
+                  )}
+                  <div ref={chatEndRef} />
+                </div>
+
+                <div className="border-t border-[var(--border)] bg-white/88 px-4 py-4 sm:px-6">
+                  <div className="rounded-[1.5rem] border border-[var(--border)] bg-white p-3 shadow-[0_12px_28px_rgba(15,23,42,0.04)]">
+                    <textarea
+                      value={chatInput}
+                      onChange={(event) => setChatInput(event.target.value)}
+                      onKeyDown={(event) => {
+                        if (event.key === "Enter" && !event.shiftKey) {
+                          event.preventDefault();
+                          void sendMessage();
+                        }
+                      }}
+                      placeholder={
+                        session
+                          ? "Ask about positioning, sales replies, support language, or internal narratives."
+                          : "Load a session to unlock the grounded composer."
+                      }
+                      disabled={!session || isReplying}
+                      className="min-h-28 w-full resize-none border-0 bg-transparent px-2 py-2 text-sm leading-7 text-slate-800 outline-none placeholder:text-slate-400 disabled:cursor-not-allowed"
                     />
-                  ))
-                )}
-
-                {isReplying && (
-                  <div className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-sm text-slate-600 shadow-sm">
-                    <LoaderCircle className="h-4 w-4 animate-spin text-[var(--blue-strong)]" />
-                    {REPLY_STAGES[replyStageIndex]}
+                    <div className="flex flex-col gap-3 border-t border-[var(--border)] px-2 pt-3 sm:flex-row sm:items-center sm:justify-between">
+                      <div className="inline-flex items-center gap-2 text-xs text-slate-500">
+                        <ShieldCheck className="h-4 w-4 text-[var(--blue-strong)]" />
+                        {session
+                          ? `${toneNote(session.mode)} ${session.materials.length} source${session.materials.length === 1 ? "" : "s"} currently in scope.`
+                          : "Shift + Enter adds a new line once chat is active."}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => void sendMessage()}
+                        disabled={!session || !chatInput.trim() || isReplying}
+                        className="rounded-full bg-[var(--blue-strong)] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[var(--blue-deep)] disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        Send
+                      </button>
+                    </div>
                   </div>
-                )}
-                <div ref={chatEndRef} />
-              </div>
-
-              <div className="mt-5 rounded-[1.7rem] border border-[var(--border)] bg-white p-3 shadow-[0_10px_24px_rgba(15,23,42,0.04)]">
-                <textarea
-                  value={chatInput}
-                  onChange={(event) => setChatInput(event.target.value)}
-                  onKeyDown={(event) => {
-                    if (event.key === "Enter" && !event.shiftKey) {
-                      event.preventDefault();
-                      void sendMessage();
-                    }
-                  }}
-                  placeholder={
-                    session
-                      ? "Ask for a rewrite, positioning answer, support reply, or investor note."
-                      : "Load a session to unlock the grounded chat composer."
-                  }
-                  disabled={!session || isReplying}
-                  className="min-h-28 w-full resize-none border-0 bg-transparent px-2 py-2 text-sm leading-7 text-slate-800 outline-none placeholder:text-slate-400 disabled:cursor-not-allowed"
-                />
-                <div className="flex flex-col gap-3 border-t border-[var(--border)] px-2 pt-3 sm:flex-row sm:items-center sm:justify-between">
-                  <div className="inline-flex items-center gap-2 text-xs text-slate-500">
-                    <ShieldCheck className="h-4 w-4 text-[var(--blue-strong)]" />
-                    {session ? toneNote(session.mode) : "Shift + Enter for a new line once chat is active."}
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => void sendMessage()}
-                    disabled={!session || !chatInput.trim() || isReplying}
-                    className="rounded-full bg-[var(--blue-strong)] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[var(--blue-deep)] disabled:cursor-not-allowed disabled:opacity-50"
-                  >
-                    Send
-                  </button>
                 </div>
               </div>
           </div>
@@ -833,57 +910,40 @@ function CompactTag({ children }: { children: ReactNode }) {
 
 function MessageBubble({
   message,
-  onFollowUp,
-  disabled,
 }: {
   message: ChatMessage;
-  onFollowUp: (prompt: string) => void;
-  disabled: boolean;
 }) {
   const isAssistant = message.role === "assistant";
 
   return (
-    <div
-      className={`rounded-[1.5rem] px-4 py-4 shadow-sm ${
-        isAssistant ? "bg-white" : "bg-[var(--blue-strong)] text-white"
-      }`}
-    >
+    <div className={`flex ${isAssistant ? "justify-start" : "justify-end"}`}>
       <div
-        className={`mb-2 text-xs font-semibold uppercase tracking-[0.16em] ${
-          isAssistant ? "text-slate-500" : "text-white/70"
+        className={`max-w-[88%] rounded-[1.5rem] border px-4 py-4 shadow-[0_12px_28px_rgba(15,23,42,0.04)] ${
+          isAssistant
+            ? "border-white/80 bg-white text-slate-900"
+            : "border-[var(--blue-strong)] bg-[var(--blue-strong)] text-white"
         }`}
       >
-        {isAssistant ? "Grounded answer" : "Prompt"}
-      </div>
-      <div
-        className={`whitespace-pre-wrap text-sm leading-7 ${
-          isAssistant ? "text-slate-800" : "text-white"
-        }`}
-      >
-        {message.content}
-      </div>
-      {isAssistant && message.references && message.references.length > 0 && (
-        <div className="mt-4 flex flex-wrap gap-2">
-          {message.references.map((reference) => (
-            <SourceChip key={reference.chunkId} reference={reference} />
-          ))}
+        <div
+          className={`whitespace-pre-wrap text-[15px] leading-7 ${
+            isAssistant ? "text-slate-800" : "text-white"
+          }`}
+        >
+          {message.content}
         </div>
-      )}
-      {isAssistant && message.suggestedFollowUps && message.suggestedFollowUps.length > 0 && (
-        <div className="mt-4 flex flex-wrap gap-2">
-          {message.suggestedFollowUps.map((prompt) => (
-            <button
-              key={prompt}
-              type="button"
-              onClick={() => onFollowUp(prompt)}
-              disabled={disabled}
-              className="rounded-full border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-medium text-slate-700 transition hover:border-[var(--blue-strong)] hover:bg-white hover:text-[var(--blue-strong)] disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              {prompt}
-            </button>
-          ))}
-        </div>
-      )}
+        {isAssistant && message.references && message.references.length > 0 && (
+          <div className="mt-4 border-t border-slate-100 pt-4">
+            <div className="mb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">
+              Sources
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {message.references.map((reference) => (
+                <SourceChip key={reference.chunkId} reference={reference} />
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
