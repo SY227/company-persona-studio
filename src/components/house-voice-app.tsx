@@ -714,56 +714,11 @@ export function HouseVoiceApp() {
                     messages.length > 0
                       ? "min-h-[24rem]"
                       : session
-                        ? "min-h-[16rem]"
-                        : "min-h-[36rem]"
+                        ? "min-h-[9rem]"
+                        : "min-h-[4.5rem]"
                   }`}
                 >
-                  {messages.length === 0 ? (
-                    session ? (
-                      <div className="rounded-[1.5rem] border border-[var(--border)] bg-white px-5 py-5 shadow-[0_12px_28px_rgba(15,23,42,0.04)]">
-                        <div className="text-sm font-semibold text-slate-950">
-                          {session.persona.companyName} is loaded.
-                        </div>
-                        <p className="mt-1 text-sm leading-6 text-slate-500">
-                          Ask a question or use one of the prompts above to start the conversation.
-                        </p>
-                      </div>
-                    ) : (
-                    <div className="flex min-h-[29rem] flex-col items-center justify-center px-5 text-center">
-                      <div className="flex h-14 w-14 items-center justify-center rounded-[1.25rem] bg-white text-[var(--blue-strong)] shadow-[0_14px_30px_rgba(15,23,42,0.06)]">
-                        <MessageSquareText className="h-6 w-6" />
-                      </div>
-                      <div className="mt-5 text-2xl font-semibold tracking-[-0.03em] text-slate-950">
-                        Open a grounded company chat.
-                      </div>
-                      <p className="mt-3 max-w-xl text-sm leading-6 text-slate-500">
-                        Bring your own materials for the main path, or use the example case for a quick pass through the interaction.
-                      </p>
-                      <div className="mt-6 flex flex-col justify-center gap-3 sm:flex-row">
-                        <button
-                          type="button"
-                          onClick={scrollToStudio}
-                          className="inline-flex items-center justify-center rounded-full bg-[var(--blue-strong)] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[var(--blue-deep)]"
-                        >
-                          Add materials
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => void createSession({ useSample: true })}
-                          disabled={isCreatingSession}
-                          className="inline-flex items-center justify-center rounded-full border border-[var(--border)] bg-white px-5 py-3 text-sm font-semibold text-slate-800 transition hover:border-[var(--blue-strong)] hover:text-[var(--blue-strong)] disabled:cursor-not-allowed disabled:opacity-60"
-                        >
-                          {isCreatingSession ? (
-                            <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
-                          ) : (
-                            <Sparkles className="mr-2 h-4 w-4" />
-                          )}
-                          Try example case
-                        </button>
-                      </div>
-                    </div>
-                    )
-                  ) : (
+                  {messages.length > 0 && (
                     messages.map((message) => <MessageBubble key={message.id} message={message} />)
                   )}
 
