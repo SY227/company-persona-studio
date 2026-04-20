@@ -376,9 +376,6 @@ export function HouseVoiceApp() {
                   Try example case
                 </button>
               </div>
-              <p className="mt-4 max-w-2xl text-sm leading-6 text-slate-500">
-                Need a quick walkthrough first? The example case is still available, but it stays secondary to the main bring-your-own-materials flow.
-              </p>
             </div>
 
             <div className="space-y-3 lg:pt-1">
