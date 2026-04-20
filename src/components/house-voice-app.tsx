@@ -709,31 +709,29 @@ export function HouseVoiceApp() {
                   </div>
                 )}
 
-                <div
-                  className={`space-y-5 bg-[rgba(252,253,255,0.82)] px-4 py-5 sm:px-6 sm:py-6 ${
-                    messages.length > 0
-                      ? "min-h-[24rem]"
-                      : session
-                        ? "min-h-0 py-2"
-                        : "min-h-[4.5rem]"
-                  }`}
-                >
-                  {messages.length > 0 && (
-                    messages.map((message) => <MessageBubble key={message.id} message={message} />)
-                  )}
+                {(messages.length > 0 || isReplying || !session) && (
+                  <div
+                    className={`space-y-5 bg-[rgba(252,253,255,0.82)] px-4 py-5 sm:px-6 sm:py-6 ${
+                      messages.length > 0 || isReplying ? "min-h-[24rem]" : "min-h-[4.5rem]"
+                    }`}
+                  >
+                    {messages.length > 0 && (
+                      messages.map((message) => <MessageBubble key={message.id} message={message} />)
+                    )}
 
-                  {isReplying && (
-                    <div className="flex justify-start">
-                      <div className="inline-flex items-center gap-2 rounded-full border border-[var(--border)] bg-white px-4 py-2 text-sm text-slate-600 shadow-sm">
-                        <LoaderCircle className="h-4 w-4 animate-spin text-[var(--blue-strong)]" />
-                        {REPLY_STAGES[replyStageIndex]}
+                    {isReplying && (
+                      <div className="flex justify-start">
+                        <div className="inline-flex items-center gap-2 rounded-full border border-[var(--border)] bg-white px-4 py-2 text-sm text-slate-600 shadow-sm">
+                          <LoaderCircle className="h-4 w-4 animate-spin text-[var(--blue-strong)]" />
+                          {REPLY_STAGES[replyStageIndex]}
+                        </div>
                       </div>
-                    </div>
-                  )}
-                  <div ref={chatEndRef} />
-                </div>
+                    )}
+                    <div ref={chatEndRef} />
+                  </div>
+                )}
 
-                <div className="border-t border-[var(--border)] bg-white/88 px-4 py-4 sm:px-6">
+                <div className={`${session && messages.length === 0 && !isReplying ? "" : "border-t border-[var(--border)]"} bg-white/88 px-4 py-4 sm:px-6`}>
                   <div className="rounded-[1.5rem] border border-[var(--border)] bg-white p-3 shadow-[0_12px_28px_rgba(15,23,42,0.04)]">
                     <textarea
                       value={chatInput}
