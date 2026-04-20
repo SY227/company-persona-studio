@@ -400,13 +400,13 @@ export function HouseVoiceApp() {
             <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
               <div>
                 <div className="text-sm font-semibold tracking-[0.18em] text-[var(--blue-strong)] uppercase">
-                  Bring your own materials
+                  Add source material
                 </div>
                 <h2 className="mt-2 text-2xl font-semibold tracking-[-0.03em] text-slate-950">
-                  Upload PDFs or add company material
+                  Add source material
                 </h2>
                 <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">
-                  Use decks, brand guidelines, founder notes, customer emails, internal explainers, support macros, or compact pasted writing. Everything here stays scoped to this session.
+                  Use PDFs, pasted text, or both. Everything stays scoped to this session.
                 </p>
               </div>
               <div className="rounded-full border border-[var(--border)] bg-slate-50 px-3 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
@@ -439,9 +439,9 @@ export function HouseVoiceApp() {
                         <Upload className="h-4.5 w-4.5" />
                       </div>
                       <div>
-                        <div className="text-sm font-semibold text-slate-900">Drop PDFs here</div>
+                        <div className="text-sm font-semibold text-slate-900">Option 1 — Upload PDFs</div>
                         <p className="mt-1 text-sm leading-6 text-slate-600">
-                          Multi-file upload is supported. The extractor reads each PDF into the current session.
+                          Add one or more PDFs, or skip this and paste text below.
                         </p>
                       </div>
                     </div>
@@ -501,13 +501,13 @@ export function HouseVoiceApp() {
 
                 <div className="rounded-[1.6rem] border border-[var(--border)] bg-white p-3.5">
                   <div className="flex items-center justify-between gap-3">
-                    <div className="text-sm font-semibold text-slate-900">Optional pasted material</div>
-                    <div className="text-xs text-slate-500">For short writing samples</div>
+                    <div className="text-sm font-semibold text-slate-900">Option 2 — Paste company material</div>
+                    <div className="text-xs text-slate-500">Paste an excerpt, email, memo, brand note, or internal explainer.</div>
                   </div>
                   <textarea
                     value={pastedText}
                     onChange={(event) => setPastedText(event.target.value)}
-                    placeholder="Paste a short company excerpt, email, memo, or brand note."
+                    placeholder="Paste company material here, or use PDFs above instead."
                     className="mt-3 min-h-18 w-full rounded-[1.2rem] border border-[var(--border)] bg-[var(--surface-muted)] px-4 py-3 text-sm leading-6 text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-[var(--blue-strong)]"
                   />
                 </div>
@@ -516,13 +516,13 @@ export function HouseVoiceApp() {
                   <div className="flex flex-col gap-2.5 sm:flex-row sm:items-start sm:justify-between">
                     <div>
                       <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
-                        Optional example case
+                        Or try an example case
                       </div>
                       <div className="mt-1.5 text-base font-semibold tracking-[-0.02em] text-slate-950">
                         {EXAMPLE_CASE.companyName}
                       </div>
                       <p className="mt-1.5 max-w-2xl text-sm leading-6 text-slate-600">
-                        {EXAMPLE_CASE.headline} Use it if you want an immediate demo before loading your own source pack.
+                        Use a sample company if you want to test the experience before adding your own material.
                       </p>
                     </div>
                     <button
