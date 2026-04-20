@@ -564,6 +564,32 @@ export function HouseVoiceApp() {
                     </button>
                   </div>
                 </div>
+
+                {!session && hasInputs && (
+                  <div className="flex flex-col gap-3 rounded-[1.6rem] border border-[rgba(24,58,117,0.14)] bg-[linear-gradient(180deg,rgba(24,58,117,0.06),rgba(255,255,255,0.98))] p-4 shadow-[0_14px_34px_rgba(24,58,117,0.08)] sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                      <div className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--blue-strong)]/80">
+                        Step 2
+                      </div>
+                      <p className="mt-1 text-sm leading-6 text-slate-600">
+                        Process the current source pack to distill the persona and open the grounded chat.
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      disabled={isCreatingSession}
+                      onClick={() => void createSession()}
+                      className="inline-flex items-center justify-center rounded-full bg-[var(--blue-strong)] px-5 py-2.5 text-sm font-semibold whitespace-nowrap text-white shadow-[0_14px_30px_rgba(24,58,117,0.22)] transition hover:bg-[var(--blue-deep)] disabled:cursor-not-allowed disabled:opacity-50 sm:shrink-0"
+                    >
+                      {isCreatingSession ? (
+                        <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
+                      ) : (
+                        <Sparkles className="mr-2 h-4 w-4" />
+                      )}
+                      {isCreatingSession ? "Running agentic flow" : "Run agentic flow"}
+                    </button>
+                  </div>
+                )}
               </div>
 
               <div className="h-full">
@@ -657,25 +683,12 @@ export function HouseVoiceApp() {
                   <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
                     {session
                       ? "Ask directly. The conversation stays grounded in the current session materials."
-                      : "Load a source pack, then start the conversation here."}
+                      : hasInputs
+                        ? "Run the source pack above, then start the conversation here."
+                        : "Load a source pack, then start the conversation here."}
                   </p>
                 </div>
                 <div className="flex flex-wrap gap-2">
-                  {!session && hasInputs && (
-                    <button
-                      type="button"
-                      disabled={isCreatingSession}
-                      onClick={() => void createSession()}
-                      className="inline-flex items-center rounded-full bg-[var(--blue-strong)] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[var(--blue-deep)] disabled:cursor-not-allowed disabled:opacity-50"
-                    >
-                      {isCreatingSession ? (
-                        <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
-                      ) : (
-                        <Sparkles className="mr-2 h-4 w-4" />
-                      )}
-                      Launch grounded chat
-                    </button>
-                  )}
                   <button
                     type="button"
                     onClick={resetSession}
