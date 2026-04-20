@@ -26,7 +26,7 @@ const HERO_POINTS = [
   {
     step: "01",
     title: "Bring a source pack",
-    copy: "Use live PDFs and pasted writing, or skip setup and load the example case instantly.",
+    copy: "Upload live PDFs and paste the writing that already defines how the company sounds.",
   },
   {
     step: "02",
@@ -44,6 +44,12 @@ const SYNTHESIS_STAGES = [
   "Reading source materials",
   "Distilling voice and operating posture",
   "Preparing the grounded chat session",
+];
+
+const INITIAL_PROMPTS = [
+  "Summarize the value proposition in the company's voice.",
+  "Draft a measured follow-up email after a product demo.",
+  "What investor-facing tone comes through in the material?",
 ];
 
 const REPLY_STAGES = [
@@ -94,7 +100,7 @@ export function HouseVoiceApp() {
 
     return session?.persona.suggestedPrompts?.length
       ? session.persona.suggestedPrompts
-      : EXAMPLE_CASE.instantPrompts;
+      : INITIAL_PROMPTS;
   }, [messages, session]);
 
   useEffect(() => {
@@ -343,8 +349,8 @@ export function HouseVoiceApp() {
           </div>
         </header>
 
-        <section className="grid gap-8 lg:grid-cols-[1.08fr_0.92fr] lg:items-stretch">
-          <div className="max-w-3xl py-2">
+        <section className="py-4">
+          <div className="max-w-5xl py-2">
             <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--surface-muted)] px-4 py-2 text-sm text-slate-600 shadow-[0_8px_20px_rgba(24,58,117,0.06)]">
               <Sparkles className="h-4 w-4 text-[var(--blue-strong)]" />
               Operator-grade company voice synthesis, grounded in the source pack.
@@ -352,15 +358,23 @@ export function HouseVoiceApp() {
             <h1 className="max-w-4xl text-5xl font-semibold leading-[1.01] tracking-[-0.05em] text-slate-950 sm:text-6xl">
               Turn company material into a grounded voice prototype that feels demo-ready.
             </h1>
-            <p className="mt-6 max-w-2xl text-lg leading-8 text-slate-600 sm:text-xl">
-              Upload PDFs, paste company writing, or load the example case in one click. The app synthesizes a working persona profile, then lets you test replies against the same session materials.
+            <p className="mt-6 max-w-3xl text-lg leading-8 text-slate-600 sm:text-xl">
+              Bring your own company materials first. This session-based prototype synthesizes a working voice profile from the source pack, then lets you test grounded replies against the same material.
             </p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
               <button
                 type="button"
+                onClick={scrollToStudio}
+                className="inline-flex items-center justify-center rounded-full bg-[var(--blue-strong)] px-6 py-3 text-sm font-semibold text-white shadow-[0_18px_44px_rgba(24,58,117,0.24)] transition hover:bg-[var(--blue-deep)]"
+              >
+                Bring my own materials
+                <ArrowUpRight className="ml-2 h-4 w-4" />
+              </button>
+              <button
+                type="button"
                 onClick={() => void createSession({ useSample: true })}
                 disabled={isCreatingSession}
-                className="inline-flex items-center justify-center rounded-full bg-[var(--blue-strong)] px-6 py-3 text-sm font-semibold text-white shadow-[0_18px_44px_rgba(24,58,117,0.24)] transition hover:bg-[var(--blue-deep)] disabled:cursor-not-allowed disabled:opacity-60"
+                className="inline-flex items-center justify-center rounded-full border border-[var(--border)] bg-white px-6 py-3 text-sm font-semibold text-slate-800 transition hover:border-[var(--blue-strong)] hover:text-[var(--blue-strong)] disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {isCreatingSession ? (
                   <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
@@ -369,15 +383,10 @@ export function HouseVoiceApp() {
                 )}
                 Try example case
               </button>
-              <button
-                type="button"
-                onClick={scrollToStudio}
-                className="inline-flex items-center justify-center rounded-full border border-[var(--border)] bg-white px-6 py-3 text-sm font-semibold text-slate-800 transition hover:border-[var(--blue-strong)] hover:text-[var(--blue-strong)]"
-              >
-                Bring my own materials
-                <ArrowUpRight className="ml-2 h-4 w-4" />
-              </button>
             </div>
+            <p className="mt-4 max-w-2xl text-sm leading-6 text-slate-500">
+              Need a quick walkthrough first? The example case is still available, but it stays secondary to the main bring-your-own-materials flow.
+            </p>
 
             <div className="mt-10 grid gap-4 sm:grid-cols-3">
               {HERO_POINTS.map((point) => (
@@ -394,109 +403,10 @@ export function HouseVoiceApp() {
               ))}
             </div>
           </div>
-
-          <div className="rounded-[2rem] border border-[var(--border)] bg-white p-6 shadow-[0_26px_70px_rgba(15,23,42,0.08)]">
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <div className="text-sm font-semibold tracking-[0.18em] text-[var(--blue-strong)] uppercase">
-                  Instant example case
-                </div>
-                <div className="mt-2 text-3xl font-semibold tracking-[-0.04em] text-slate-950">
-                  {EXAMPLE_CASE.companyName}
-                </div>
-                <p className="mt-3 text-sm font-medium text-[var(--blue-strong)]">
-                  {EXAMPLE_CASE.category}
-                </p>
-              </div>
-              <MessageSquareText className="h-9 w-9 text-[var(--blue-strong)]" />
-            </div>
-
-            <p className="mt-5 text-base leading-7 text-slate-700">{EXAMPLE_CASE.headline}</p>
-            <p className="mt-3 text-sm leading-6 text-slate-600">{EXAMPLE_CASE.description}</p>
-
-            <div className="mt-6 grid gap-3 sm:grid-cols-3">
-              {EXAMPLE_CASE.callouts.map((item) => (
-                <div key={item} className="rounded-2xl bg-[var(--surface-muted)] px-4 py-4 text-sm leading-6 text-slate-700">
-                  {item}
-                </div>
-              ))}
-            </div>
-
-            <div className="mt-6 rounded-[1.6rem] border border-[var(--border)] bg-slate-50 p-5">
-              <div className="text-xs font-semibold tracking-[0.2em] text-slate-500 uppercase">
-                Included source pack
-              </div>
-              <div className="mt-3 flex flex-wrap gap-2">
-                {EXAMPLE_CASE.sourceLabels.map((label) => (
-                  <span
-                    key={label}
-                    className="rounded-full border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-700"
-                  >
-                    {label}
-                  </span>
-                ))}
-              </div>
-            </div>
-
-            <div className="mt-6 rounded-[1.6rem] border border-[var(--border)] bg-[linear-gradient(180deg,rgba(239,244,251,0.72),rgba(255,255,255,0.98))] p-5">
-              <div className="text-xs font-semibold tracking-[0.2em] text-slate-500 uppercase">
-                Good first prompts
-              </div>
-              <div className="mt-3 space-y-2">
-                {EXAMPLE_CASE.instantPrompts.map((prompt) => (
-                  <div key={prompt} className="rounded-2xl bg-white px-4 py-3 text-sm text-slate-700 shadow-[0_10px_24px_rgba(15,23,42,0.04)]">
-                    {prompt}
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <button
-              type="button"
-              onClick={() => void createSession({ useSample: true })}
-              disabled={isCreatingSession}
-              className="mt-6 inline-flex w-full items-center justify-center rounded-full bg-[var(--blue-strong)] px-6 py-3 text-sm font-semibold text-white shadow-[0_18px_44px_rgba(24,58,117,0.22)] transition hover:bg-[var(--blue-deep)] disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              {isCreatingSession ? (
-                <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
-              ) : (
-                <Sparkles className="mr-2 h-4 w-4" />
-              )}
-              Load {EXAMPLE_CASE.companyName}
-            </button>
-          </div>
         </section>
 
         <section id="studio" className="mt-20 grid gap-8 lg:grid-cols-[0.94fr_1.06fr]">
           <div className="space-y-6">
-            <div className="rounded-[2rem] border border-[var(--border)] bg-[linear-gradient(180deg,rgba(24,58,117,0.05),rgba(255,255,255,0.98))] p-6 shadow-[0_18px_50px_rgba(15,23,42,0.06)]">
-              <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
-                <div>
-                  <div className="text-sm font-semibold tracking-[0.18em] text-[var(--blue-strong)] uppercase">
-                    Example case
-                  </div>
-                  <h2 className="mt-2 text-2xl font-semibold tracking-[-0.03em] text-slate-950">
-                    Want the fastest possible test? Load {EXAMPLE_CASE.companyName}.
-                  </h2>
-                  <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
-                    It is a polished finance software sample with a clear operating brief, founder narrative, and sales language. Good for live demos, quick UX reviews, and zero-friction first runs.
-                  </p>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => void createSession({ useSample: true })}
-                  disabled={isCreatingSession}
-                  className="inline-flex items-center justify-center rounded-full border border-[var(--border)] bg-white px-5 py-3 text-sm font-semibold text-slate-800 transition hover:border-[var(--blue-strong)] hover:text-[var(--blue-strong)] disabled:cursor-not-allowed disabled:opacity-60"
-                >
-                  {isCreatingSession ? (
-                    <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
-                  ) : (
-                    <Sparkles className="mr-2 h-4 w-4" />
-                  )}
-                  Try example case
-                </button>
-              </div>
-            </div>
 
             <div className="rounded-[2rem] border border-[var(--border)] bg-white p-6 shadow-[0_18px_50px_rgba(15,23,42,0.06)]">
               <div className="flex items-start justify-between gap-4">
@@ -594,6 +504,45 @@ export function HouseVoiceApp() {
                   </div>
                 </div>
               )}
+
+              <div className="mt-6 rounded-[1.6rem] border border-[var(--border)] bg-[linear-gradient(180deg,rgba(239,244,251,0.78),rgba(255,255,255,0.98))] p-5">
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                  <div>
+                    <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                      Optional example case
+                    </div>
+                    <div className="mt-2 text-lg font-semibold tracking-[-0.02em] text-slate-950">
+                      {EXAMPLE_CASE.companyName}
+                    </div>
+                    <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
+                      {EXAMPLE_CASE.headline} Use it if you want an immediate demo before loading your own source pack.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => void createSession({ useSample: true })}
+                    disabled={isCreatingSession}
+                    className="inline-flex items-center justify-center rounded-full border border-[var(--border)] bg-white px-4 py-2 text-sm font-semibold text-slate-800 transition hover:border-[var(--blue-strong)] hover:text-[var(--blue-strong)] disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {isCreatingSession ? (
+                      <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
+                      <Sparkles className="mr-2 h-4 w-4" />
+                    )}
+                    Try example case
+                  </button>
+                </div>
+                <div className="mt-4 flex flex-wrap gap-2">
+                  {EXAMPLE_CASE.sourceLabels.map((label) => (
+                    <span
+                      key={label}
+                      className="rounded-full border border-white bg-white px-3 py-2 text-xs font-medium text-slate-700 shadow-sm"
+                    >
+                      {label}
+                    </span>
+                  ))}
+                </div>
+              </div>
 
               <div className="mt-6">
                 <div className="mb-3 flex items-center justify-between gap-3">
@@ -695,7 +644,7 @@ export function HouseVoiceApp() {
           </div>
 
           <div className="space-y-6">
-            <div className="rounded-[2rem] border border-[var(--border)] bg-white p-6 shadow-[0_18px_50px_rgba(15,23,42,0.06)] lg:sticky lg:top-6">
+            <div className="rounded-[2rem] border border-[var(--border)] bg-white p-6 shadow-[0_18px_50px_rgba(15,23,42,0.06)]">
               <div className="flex flex-col gap-4 border-b border-[var(--border)] pb-5 sm:flex-row sm:items-start sm:justify-between">
                 <div>
                   <div className="text-sm font-semibold tracking-[0.18em] text-[var(--blue-strong)] uppercase">
@@ -763,17 +712,24 @@ export function HouseVoiceApp() {
                       <MessageSquareText className="h-5 w-5" />
                     </div>
                     <div className="mt-4 text-lg font-semibold text-slate-900">
-                      Start with the example case or bring your own source pack.
+                      Bring in a source pack to open the grounded chat session.
                     </div>
                     <p className="mt-2 mx-auto max-w-xl text-sm leading-6 text-slate-500">
-                      The sample is the fastest path to a full demo. If you already have real material, upload it on the left and synthesize the session when ready.
+                      Upload your own material to test the core workflow. If you only want a quick walkthrough, the example case is still available as a secondary path.
                     </p>
                     <div className="mt-5 flex flex-col justify-center gap-3 sm:flex-row">
                       <button
                         type="button"
+                        onClick={scrollToStudio}
+                        className="inline-flex items-center justify-center rounded-full bg-[var(--blue-strong)] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[var(--blue-deep)]"
+                      >
+                        Go to inputs
+                      </button>
+                      <button
+                        type="button"
                         onClick={() => void createSession({ useSample: true })}
                         disabled={isCreatingSession}
-                        className="inline-flex items-center justify-center rounded-full bg-[var(--blue-strong)] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[var(--blue-deep)] disabled:cursor-not-allowed disabled:opacity-60"
+                        className="inline-flex items-center justify-center rounded-full border border-[var(--border)] bg-white px-5 py-3 text-sm font-semibold text-slate-800 transition hover:border-[var(--blue-strong)] hover:text-[var(--blue-strong)] disabled:cursor-not-allowed disabled:opacity-60"
                       >
                         {isCreatingSession ? (
                           <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
@@ -781,13 +737,6 @@ export function HouseVoiceApp() {
                           <Sparkles className="mr-2 h-4 w-4" />
                         )}
                         Try example case
-                      </button>
-                      <button
-                        type="button"
-                        onClick={scrollToStudio}
-                        className="inline-flex items-center justify-center rounded-full border border-[var(--border)] bg-white px-5 py-3 text-sm font-semibold text-slate-800 transition hover:border-[var(--blue-strong)] hover:text-[var(--blue-strong)]"
-                      >
-                        Go to inputs
                       </button>
                     </div>
                   </div>
