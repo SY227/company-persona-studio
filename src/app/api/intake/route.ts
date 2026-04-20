@@ -69,18 +69,23 @@ async function synthesizePersona(materials: SourceMaterial[]) {
 
 async function parseMaterials(formData: FormData) {
   const useSample = formData.get("useSample") === "true";
+  const sourceMode = formData.get("sourceMode") === "paste" ? "paste" : "files";
   const pastedText = (formData.get("pastedText")?.toString() ?? "").trim();
 
   if (useSample) {
     return {
       materials: [...SAMPLE_COMPANY.materials],
       sourceType: "sample" as const,
+      sourceMode,
     };
   }
 
-  const files = formData
-    .getAll("files")
-    .filter((entry): entry is File => entry instanceof File && entry.size > 0);
+  const files =
+    sourceMode === "files"
+      ? formData
+          .getAll("files")
+          .filter((entry): entry is File => entry instanceof File && entry.size > 0)
+      : [];
 
   const materials: SourceMaterial[] = [];
 
@@ -104,7 +109,7 @@ async function parseMaterials(formData: FormData) {
     });
   }
 
-  if (pastedText) {
+  if (sourceMode === "paste" && pastedText) {
     materials.push({
       id: `paste-${crypto.randomUUID()}`,
       label: "Pasted writing sample",
@@ -117,16 +122,22 @@ async function parseMaterials(formData: FormData) {
   return {
     materials,
     sourceType: "uploaded" as const,
+    sourceMode,
   };
 }
 
 export async function POST(request: Request) {
   const formData = await request.formData();
-  const { materials, sourceType } = await parseMaterials(formData);
+  const { materials, sourceType, sourceMode } = await parseMaterials(formData);
 
   if (!materials.length) {
     return NextResponse.json(
-      { error: "Add at least one PDF, some pasted writing, or try the example case." },
+      {
+        error:
+          sourceMode === "paste"
+            ? "Paste some company material or try the example case."
+            : "Add at least one PDF or try the example case.",
+      },
       { status: 400 },
     );
   }

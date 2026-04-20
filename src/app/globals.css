@@ -6,6 +6,8 @@
   --border: rgba(28, 52, 84, 0.12);
   --blue-strong: #183a75;
   --blue-deep: #112b57;
+  --blue-primary: #416a9f;
+  --blue-primary-hover: #365d90;
   --flow-complete-bg: rgba(224, 235, 252, 0.92);
   --flow-complete-border: rgba(112, 148, 213, 0.28);
 }

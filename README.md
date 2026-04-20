@@ -1,11 +1,10 @@
 # House Voice
 
-House Voice is a local Next.js prototype for turning company PDFs and pasted material into a premium, session-based grounded company chat experience.
+House Voice is a local Next.js prototype for turning company PDFs or pasted material into a premium, session-based grounded company chat experience.
 
 It is intentionally scoped as a fast session-based prototype:
-- upload PDFs
-- paste writing samples
-- distill a company persona from the material
+- upload PDFs or paste writing samples for a given run
+- distill a company persona from the selected material
 - launch a grounded company chat with visible source backing
 - optionally try a polished sample company instantly
 
@@ -22,7 +21,7 @@ This is **not** a production multi-tenant chatbot platform.
 
 ## What it does
 
-1. Accepts PDF uploads and pasted writing
+1. Accepts either PDF uploads or pasted writing for each run
 2. Extracts text and builds lightweight source chunks
 3. Synthesizes a persona profile with:
    - company persona summary
@@ -72,7 +71,8 @@ If no key is present, the app still runs in a local demo fallback mode so the pr
 
 - The app is session-based only.
 - There is no database, auth system, or persistent user account model.
-- Uploaded text is processed for the current live demo flow.
+- The source-material chooser is single-path per run: upload PDFs or paste writing.
+- Changing source material after a completed run resets the current in-browser session so the next run starts fresh.
 - Resetting the session clears the current in-browser demo state.
 - If Gemini is configured, source excerpts are sent to the model to synthesize the persona and generate replies.
 - Assistant replies now carry their own mode badge so you can tell whether a given answer came from live Gemini or the fallback path.

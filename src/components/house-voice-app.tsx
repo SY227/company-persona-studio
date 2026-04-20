@@ -23,7 +23,7 @@ const HERO_POINTS = [
   {
     step: "01",
     title: "Bring a source pack",
-    copy: "Upload PDFs and paste the writing that already defines how the company presents itself.",
+    copy: "Upload PDFs or paste the writing that already defines how the company presents itself.",
   },
   {
     step: "02",
@@ -41,7 +41,7 @@ const MATERIAL_FLOW_STEPS = [
   {
     step: "01",
     title: "Ingest materials",
-    copy: "PDFs and pasted writing enter one live session.",
+    copy: "The selected source path enters one live session.",
     Icon: Upload,
   },
   {
@@ -76,6 +76,8 @@ const REPLY_STAGES = [
   "Checking the answer against session context",
 ];
 
+type SourceInputMode = "files" | "paste";
+
 function toneNote(mode: SessionPayload["mode"] | ChatResponsePayload["mode"] | null) {
   if (mode === "live") {
     return "Live model, grounded to the current session.";
@@ -88,11 +90,36 @@ function toneNote(mode: SessionPayload["mode"] | ChatResponsePayload["mode"] | n
   return "Session based only.";
 }
 
+function fileKey(file: File) {
+  return `${file.name}-${file.size}-${file.lastModified}`;
+}
+
+function mergePdfFiles(currentFiles: File[], nextFiles: File[]) {
+  const map = new Map(currentFiles.map((file) => [fileKey(file), file]));
+
+  for (const file of nextFiles) {
+    map.set(fileKey(file), file);
+  }
+
+  return Array.from(map.values());
+}
+
+function sameFiles(currentFiles: File[], nextFiles: File[]) {
+  if (currentFiles.length !== nextFiles.length) return false;
+
+  const currentKeys = currentFiles.map(fileKey).sort();
+  const nextKeys = nextFiles.map(fileKey).sort();
+
+  return currentKeys.every((key, index) => key === nextKeys[index]);
+}
+
 export function HouseVoiceApp() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const chatScrollRef = useRef<HTMLDivElement>(null);
+  const sessionRevisionRef = useRef(0);
   const [files, setFiles] = useState<File[]>([]);
   const [pastedText, setPastedText] = useState("");
+  const [sourceInputMode, setSourceInputMode] = useState<SourceInputMode>("files");
   const [session, setSession] = useState<SessionPayload | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [chatInput, setChatInput] = useState("");
@@ -104,8 +131,12 @@ export function HouseVoiceApp() {
   const [replyStageIndex, setReplyStageIndex] = useState(0);
   const [runningDotCount, setRunningDotCount] = useState(1);
 
-  const hasInputs = files.length > 0 || pastedText.trim().length > 0;
+  const hasFiles = files.length > 0;
+  const hasPastedText = pastedText.trim().length > 0;
+  const hasAnyInputs = hasFiles || hasPastedText;
+  const hasActiveInputs = sourceInputMode === "files" ? hasFiles : hasPastedText;
   const isSampleSession = session?.sourceType === "sample";
+  const selectedSourceLabel = sourceInputMode === "files" ? "uploaded PDFs" : "pasted material";
 
   const suggestedPrompts = useMemo(() => {
     const latestSuggestions = [...messages]
@@ -188,6 +219,19 @@ export function HouseVoiceApp() {
     });
   }
 
+  function invalidateCurrentSession() {
+    sessionRevisionRef.current += 1;
+    setSession(null);
+    setMessages([]);
+    setChatInput("");
+    setNotice(null);
+    setSynthesisStageIndex(0);
+    setReplyStageIndex(0);
+    setRunningDotCount(1);
+    setIsCreatingSession(false);
+    setIsReplying(false);
+  }
+
   function onFilesSelected(nextFiles: File[]) {
     const pdfs = nextFiles.filter(
       (file) => file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf"),
@@ -198,20 +242,62 @@ export function HouseVoiceApp() {
       return;
     }
 
-    setFiles((current) => {
-      const map = new Map(current.map((file) => [`${file.name}-${file.size}`, file]));
-      for (const file of pdfs) {
-        map.set(`${file.name}-${file.size}`, file);
+    const nextMergedFiles = mergePdfFiles(files, pdfs);
+
+    if (!sameFiles(files, nextMergedFiles)) {
+      if (session) {
+        invalidateCurrentSession();
       }
-      return Array.from(map.values());
-    });
+
+      setFiles(nextMergedFiles);
+    }
+
     setNotice(null);
   }
 
   function removeFile(target: File) {
-    setFiles((current) =>
-      current.filter((file) => !(file.name === target.name && file.size === target.size)),
-    );
+    const nextFiles = files.filter((file) => fileKey(file) !== fileKey(target));
+
+    if (sameFiles(files, nextFiles)) return;
+
+    if (session) {
+      invalidateCurrentSession();
+    }
+
+    setFiles(nextFiles);
+  }
+
+  function clearFiles() {
+    if (!files.length) return;
+
+    if (session) {
+      invalidateCurrentSession();
+    }
+
+    setFiles([]);
+    setNotice(null);
+  }
+
+  function handlePasteChange(nextValue: string) {
+    if (nextValue === pastedText) return;
+
+    if (session) {
+      invalidateCurrentSession();
+    }
+
+    setPastedText(nextValue);
+    setNotice(null);
+  }
+
+  function handleSourceModeChange(nextMode: SourceInputMode) {
+    if (nextMode === sourceInputMode) return;
+
+    if (session) {
+      invalidateCurrentSession();
+    }
+
+    setSourceInputMode(nextMode);
+    setNotice(null);
   }
 
   async function requestReply(
@@ -250,6 +336,8 @@ export function HouseVoiceApp() {
   }
 
   async function createSession(options?: { useSample?: boolean; prefillPrompt?: string }) {
+    const sessionRevision = sessionRevisionRef.current;
+
     setSynthesisStageIndex(0);
     setRunningDotCount(1);
     setIsCreatingSession(true);
@@ -260,8 +348,14 @@ export function HouseVoiceApp() {
       formData.append("useSample", options?.useSample ? "true" : "false");
 
       if (!options?.useSample) {
-        files.forEach((file) => formData.append("files", file));
-        formData.append("pastedText", pastedText);
+        formData.append("sourceMode", sourceInputMode);
+
+        if (sourceInputMode === "files") {
+          files.forEach((file) => formData.append("files", file));
+          formData.append("pastedText", "");
+        } else {
+          formData.append("pastedText", pastedText.trim());
+        }
       }
 
       const response = await fetch("/api/intake", {
@@ -275,6 +369,10 @@ export function HouseVoiceApp() {
         throw new Error((data as { error?: string }).error || "Could not create the live session.");
       }
 
+      if (sessionRevision !== sessionRevisionRef.current) {
+        return;
+      }
+
       const nextSession = data as SessionPayload;
       const nextMessages: ChatMessage[] = [];
 
@@ -285,6 +383,7 @@ export function HouseVoiceApp() {
       if (options?.useSample) {
         setFiles([]);
         setPastedText("");
+        setSourceInputMode("files");
       }
 
       scrollToChatDemo();
@@ -304,25 +403,40 @@ export function HouseVoiceApp() {
 
         try {
           const assistantMessage = await requestReply(nextSession, question, historyWithQuestion);
+
+          if (sessionRevision !== sessionRevisionRef.current) {
+            return;
+          }
+
           setMessages([...historyWithQuestion, assistantMessage]);
         } finally {
-          setIsReplying(false);
+          if (sessionRevision === sessionRevisionRef.current) {
+            setIsReplying(false);
+          }
         }
       }
     } catch (error) {
+      if (sessionRevision !== sessionRevisionRef.current) {
+        return;
+      }
+
       setNotice(
         error instanceof Error
           ? error.message
           : "Something went wrong while preparing the session.",
       );
     } finally {
-      setIsCreatingSession(false);
+      if (sessionRevision === sessionRevisionRef.current) {
+        setIsCreatingSession(false);
+      }
     }
   }
 
   async function sendMessage(prefill?: string) {
     const question = (prefill ?? chatInput).trim();
     if (!question || !session || isReplying) return;
+
+    const sessionRevision = sessionRevisionRef.current;
 
     const userMessage: ChatMessage = {
       id: crypto.randomUUID(),
@@ -339,21 +453,30 @@ export function HouseVoiceApp() {
 
     try {
       const assistantMessage = await requestReply(session, question, nextMessages);
+
+      if (sessionRevision !== sessionRevisionRef.current) {
+        return;
+      }
+
       setMessages((current) => [...current, assistantMessage]);
     } catch (error) {
+      if (sessionRevision !== sessionRevisionRef.current) {
+        return;
+      }
+
       setNotice(error instanceof Error ? error.message : "The chat request failed.");
     } finally {
-      setIsReplying(false);
+      if (sessionRevision === sessionRevisionRef.current) {
+        setIsReplying(false);
+      }
     }
   }
 
   function resetSession() {
-    setSession(null);
-    setMessages([]);
-    setChatInput("");
+    invalidateCurrentSession();
     setFiles([]);
     setPastedText("");
-    setNotice(null);
+    setSourceInputMode("files");
   }
 
   const flowSteps = useMemo(() => {
@@ -430,7 +553,7 @@ export function HouseVoiceApp() {
                   Add source material
                 </h2>
                 <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">
-                  Use PDFs, pasted text, or both. Everything stays scoped to this session.
+                  Choose one path for the next run, either upload PDFs or paste material. Everything stays scoped to this session.
                 </p>
               </div>
               <div className="rounded-full border border-[var(--border)] bg-slate-50 px-3 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
@@ -438,103 +561,139 @@ export function HouseVoiceApp() {
               </div>
             </div>
 
-            <div className="mt-6 grid gap-4 lg:grid-cols-[1.14fr_0.86fr] lg:items-stretch">
-              <div className="space-y-4">
-                <div
-                  onDragOver={(event) => {
-                    event.preventDefault();
-                    setIsDragging(true);
-                  }}
-                  onDragLeave={() => setIsDragging(false)}
-                  onDrop={(event) => {
-                    event.preventDefault();
-                    setIsDragging(false);
-                    onFilesSelected(Array.from(event.dataTransfer.files));
-                  }}
-                  className={`rounded-[1.6rem] border border-dashed p-4 transition ${
-                    isDragging
-                      ? "border-[var(--blue-strong)] bg-[rgba(239,244,251,0.95)]"
-                      : "border-[var(--border)] bg-[var(--surface-muted)]"
-                  }`}
-                >
-                  <div className="flex flex-col gap-3 text-left sm:flex-row sm:items-start sm:justify-between">
-                    <div className="flex items-start gap-3">
-                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-white text-[var(--blue-strong)] shadow-[0_12px_30px_rgba(15,23,42,0.06)]">
-                        <Upload className="h-4.5 w-4.5" />
-                      </div>
-                      <div>
-                        <div className="text-sm font-semibold text-slate-900">Option 1 — Upload PDFs</div>
-                        <p className="mt-1 text-sm leading-6 text-slate-600">
-                          Add one or more PDFs, or skip this and paste text below.
-                        </p>
-                      </div>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => fileInputRef.current?.click()}
-                      className="rounded-full border border-[var(--border)] bg-white px-4 py-2 text-sm font-medium whitespace-nowrap text-slate-800 transition hover:border-[var(--blue-strong)] hover:text-[var(--blue-strong)] sm:mt-0.5 sm:shrink-0"
-                    >
-                      Choose PDFs
-                    </button>
-                  </div>
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="application/pdf,.pdf"
-                    multiple
-                    className="hidden"
-                    onChange={(event) => onFilesSelected(Array.from(event.target.files ?? []))}
-                  />
+            <div className="mt-6 grid gap-5 lg:grid-cols-[1.14fr_0.86fr] lg:items-stretch">
+              <div className="space-y-5">
+                <div className="inline-flex w-full rounded-full border border-[var(--border)] bg-[var(--surface-muted)] p-1 sm:w-auto">
+                  {[
+                    { value: "files", label: "Upload PDFs" },
+                    { value: "paste", label: "Paste material" },
+                  ].map((option) => {
+                    const isActive = sourceInputMode === option.value;
+
+                    return (
+                      <button
+                        key={option.value}
+                        type="button"
+                        onClick={() => handleSourceModeChange(option.value as SourceInputMode)}
+                        className={`flex-1 rounded-full px-4 py-2.5 text-sm font-semibold transition sm:flex-none ${
+                          isActive
+                            ? "bg-white text-[var(--blue-strong)] shadow-[0_8px_18px_rgba(15,23,42,0.06)]"
+                            : "text-slate-500 hover:text-slate-800"
+                        }`}
+                        aria-pressed={isActive}
+                      >
+                        {option.label}
+                      </button>
+                    );
+                  })}
                 </div>
 
-                {files.length > 0 && (
-                  <div className="rounded-[1.5rem] border border-[var(--border)] bg-slate-50 p-4">
-                    <div className="flex flex-wrap items-center justify-between gap-3">
-                      <div className="text-sm font-semibold text-slate-900">
-                        {files.length} PDF{files.length === 1 ? "" : "s"} loaded
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => setFiles([])}
-                        className="text-sm font-medium text-slate-500 transition hover:text-slate-800"
-                      >
-                        Clear files
-                      </button>
-                    </div>
-                    <div className="mt-3 flex flex-wrap gap-2">
-                      {files.map((file) => (
-                        <span
-                          key={`${file.name}-${file.size}`}
-                          className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700"
+                {sourceInputMode === "files" ? (
+                  <>
+                    <div
+                      onDragOver={(event) => {
+                        event.preventDefault();
+                        setIsDragging(true);
+                      }}
+                      onDragLeave={() => setIsDragging(false)}
+                      onDrop={(event) => {
+                        event.preventDefault();
+                        setIsDragging(false);
+                        onFilesSelected(Array.from(event.dataTransfer.files));
+                      }}
+                      className={`rounded-[1.7rem] border border-dashed p-5 transition ${
+                        isDragging
+                          ? "border-[var(--blue-strong)] bg-[rgba(239,244,251,0.95)]"
+                          : "border-[var(--border)] bg-[var(--surface-muted)]"
+                      }`}
+                    >
+                      <div className="flex flex-col gap-3 text-left sm:flex-row sm:items-start sm:justify-between">
+                        <div className="flex items-start gap-3">
+                          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-white text-[var(--blue-strong)] shadow-[0_12px_30px_rgba(15,23,42,0.06)]">
+                            <Upload className="h-4.5 w-4.5" />
+                          </div>
+                          <div>
+                            <div className="text-sm font-semibold text-slate-900">Upload PDFs</div>
+                            <p className="mt-1 text-sm leading-6 text-slate-600">
+                              Add one or more PDFs for this run. Loaded files stay ready until you clear them.
+                            </p>
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => fileInputRef.current?.click()}
+                          className="rounded-full border border-[var(--border)] bg-white px-4 py-2 text-sm font-medium whitespace-nowrap text-slate-800 transition hover:border-[var(--blue-strong)] hover:text-[var(--blue-strong)] sm:mt-0.5 sm:shrink-0"
                         >
-                          <FileText className="h-4 w-4 text-[var(--blue-strong)]" />
-                          {file.name}
+                          Choose PDFs
+                        </button>
+                      </div>
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="application/pdf,.pdf"
+                        multiple
+                        className="hidden"
+                        onChange={(event) => onFilesSelected(Array.from(event.target.files ?? []))}
+                      />
+                    </div>
+
+                    {files.length > 0 && (
+                      <div className="rounded-[1.6rem] border border-[var(--border)] bg-slate-50 p-[1.125rem]">
+                        <div className="flex flex-wrap items-center justify-between gap-3">
+                          <div className="text-sm font-semibold text-slate-900">
+                            {files.length} PDF{files.length === 1 ? "" : "s"} ready
+                          </div>
                           <button
                             type="button"
-                            onClick={() => removeFile(file)}
-                            className="ml-1 text-slate-400 transition hover:text-slate-700"
-                            aria-label={`Remove ${file.name}`}
+                            onClick={clearFiles}
+                            className="text-sm font-medium text-slate-500 transition hover:text-slate-800"
                           >
-                            ×
+                            Clear files
                           </button>
-                        </span>
-                      ))}
+                        </div>
+                        <div className="mt-3 flex flex-wrap gap-2">
+                          {files.map((file) => (
+                            <span
+                              key={fileKey(file)}
+                              className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700"
+                            >
+                              <FileText className="h-4 w-4 text-[var(--blue-strong)]" />
+                              {file.name}
+                              <button
+                                type="button"
+                                onClick={() => removeFile(file)}
+                                className="ml-1 text-slate-400 transition hover:text-slate-700"
+                                aria-label={`Remove ${file.name}`}
+                              >
+                                ×
+                              </button>
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <div className="rounded-[1.7rem] border border-[var(--border)] bg-white p-[1.125rem]">
+                    <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                      <div>
+                        <div className="text-sm font-semibold text-slate-900">Paste material</div>
+                        <p className="mt-1 text-sm leading-6 text-slate-600">
+                          Paste an excerpt, memo, internal explainer, or brand note for this run.
+                        </p>
+                      </div>
+                      <div className="text-xs text-slate-500">
+                        The text stays here if you switch back to PDFs later.
+                      </div>
                     </div>
+                    <textarea
+                      value={pastedText}
+                      onChange={(event) => handlePasteChange(event.target.value)}
+                      placeholder="Paste company material here for the next run."
+                      className="mt-3 min-h-40 w-full rounded-[1.25rem] border border-[var(--border)] bg-[var(--surface-muted)] px-4 py-3 text-sm leading-6 text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-[var(--blue-strong)]"
+                    />
                   </div>
                 )}
-
-                <div className="rounded-[1.6rem] border border-[var(--border)] bg-white p-3.5">
-                  <div className="flex items-center justify-between gap-3">
-                    <div className="text-sm font-semibold text-slate-900">Option 2 — Paste company material</div>
-                    <div className="text-xs text-slate-500">Paste an excerpt, email, memo, brand note, or internal explainer.</div>
-                  </div>
-                  <textarea
-                    value={pastedText}
-                    onChange={(event) => setPastedText(event.target.value)}
-                    placeholder="Paste company material here, or use PDFs above instead."
-                    className="mt-3 min-h-18 w-full rounded-[1.2rem] border border-[var(--border)] bg-[var(--surface-muted)] px-4 py-3 text-sm leading-6 text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-[var(--blue-strong)]"
-                  />
-                </div>
 
                 <div className="rounded-[1.6rem] border border-[var(--border)] bg-[linear-gradient(180deg,rgba(239,244,251,0.78),rgba(255,255,255,0.98))] p-3.5">
                   <div className="flex flex-col gap-2.5 sm:flex-row sm:items-start sm:justify-between">
@@ -565,21 +724,19 @@ export function HouseVoiceApp() {
                   </div>
                 </div>
 
-                {!session && hasInputs && (
+                {!session && hasActiveInputs && (
                   <div className="flex flex-col gap-3 rounded-[1.6rem] border border-[rgba(24,58,117,0.14)] bg-[linear-gradient(180deg,rgba(24,58,117,0.06),rgba(255,255,255,0.98))] p-4 shadow-[0_14px_34px_rgba(24,58,117,0.08)] sm:flex-row sm:items-center sm:justify-between">
                     <div>
-                      <div className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--blue-strong)]/80">
-                        Step 2
-                      </div>
+                      <div className="text-sm font-semibold text-slate-900">Run the agentic flow</div>
                       <p className="mt-1 text-sm leading-6 text-slate-600">
-                        Process the current source pack to distill the persona and open the grounded chat.
+                        Process the selected source material to distill the persona and open the grounded chat.
                       </p>
                     </div>
                     <button
                       type="button"
                       disabled={isCreatingSession}
                       onClick={() => void createSession()}
-                      className="inline-flex items-center justify-center rounded-full bg-[var(--blue-strong)] px-5 py-2.5 text-sm font-semibold whitespace-nowrap text-white shadow-[0_14px_30px_rgba(24,58,117,0.22)] transition hover:bg-[var(--blue-deep)] disabled:cursor-not-allowed disabled:opacity-50 sm:shrink-0"
+                      className="inline-flex items-center justify-center rounded-full bg-[var(--blue-primary)] px-5 py-2.5 text-sm font-semibold whitespace-nowrap text-white shadow-[0_14px_30px_rgba(65,106,159,0.22)] transition hover:bg-[var(--blue-primary-hover)] disabled:cursor-not-allowed disabled:opacity-50 sm:shrink-0"
                     >
                       {isCreatingSession ? (
                         <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
@@ -635,9 +792,7 @@ export function HouseVoiceApp() {
                             className={`flex h-8.5 w-8.5 shrink-0 items-center justify-center rounded-2xl text-[var(--blue-strong)] ${
                               state === "completed"
                                 ? "bg-white/80"
-                                : state === "running"
-                                  ? "bg-[var(--surface-muted)]"
-                                  : "bg-[var(--surface-muted)]"
+                                : "bg-[var(--surface-muted)]"
                             }`}
                           >
                             <Icon className="h-4 w-4" />
@@ -670,51 +825,49 @@ export function HouseVoiceApp() {
             id="chat-demo"
             className="rounded-[2rem] border border-[var(--border)] bg-white p-6 shadow-[0_22px_56px_rgba(15,23,42,0.08)]"
           >
-              <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-                <div>
-                  <div className="text-sm font-semibold tracking-[0.18em] text-[var(--blue-strong)] uppercase">
-                    Grounded company chat
-                  </div>
-                  <h2 className="mt-2 text-2xl font-semibold tracking-[-0.03em] text-slate-950">
-                    {session
-                      ? `Chat with ${session.persona.companyName}`
-                      : "The chat opens here"}
-                  </h2>
-                  <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
-                    {session
-                      ? "Ask directly. The conversation stays grounded in the current session materials."
-                      : hasInputs
-                        ? "Run the source pack above, then start the conversation here."
-                        : "Load a source pack, then start the conversation here."}
-                  </p>
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+              <div>
+                <div className="text-sm font-semibold tracking-[0.18em] text-[var(--blue-strong)] uppercase">
+                  Grounded company chat
                 </div>
-                <div className="flex flex-wrap gap-2">
-                  <button
-                    type="button"
-                    onClick={resetSession}
-                    disabled={!session && !files.length && !pastedText}
-                    className="inline-flex items-center rounded-full border border-[var(--border)] px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-slate-400 disabled:cursor-not-allowed disabled:opacity-50"
-                  >
-                    <RefreshCcw className="mr-2 h-4 w-4" />
-                    Reset all
-                  </button>
-                  <button
-                    type="button"
-                    disabled={!session}
-                    onClick={() => {
-                      setSession(null);
-                      setMessages([]);
-                      setChatInput("");
-                      scrollToStudio();
-                    }}
-                    className="inline-flex items-center rounded-full border border-[var(--border)] px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-slate-400 disabled:cursor-not-allowed disabled:opacity-50"
-                  >
-                    Replace materials
-                  </button>
-                </div>
+                <h2 className="mt-2 text-2xl font-semibold tracking-[-0.03em] text-slate-950">
+                  {session
+                    ? `Chat with ${session.persona.companyName}`
+                    : "The chat opens here"}
+                </h2>
+                <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
+                  {session
+                    ? "Ask directly. The conversation stays grounded in the current session materials."
+                    : hasActiveInputs
+                      ? "Run the source pack above, then start the conversation here."
+                      : "Load a source pack, then start the conversation here."}
+                </p>
               </div>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={resetSession}
+                  disabled={!session && !hasAnyInputs}
+                  className="inline-flex items-center rounded-full border border-[var(--border)] px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-slate-400 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  <RefreshCcw className="mr-2 h-4 w-4" />
+                  Reset all
+                </button>
+                <button
+                  type="button"
+                  disabled={!session}
+                  onClick={() => {
+                    invalidateCurrentSession();
+                    scrollToStudio();
+                  }}
+                  className="inline-flex items-center rounded-full border border-[var(--border)] px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-slate-400 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  Replace materials
+                </button>
+              </div>
+            </div>
 
-              {(hasInputs || session) && (
+            {(hasActiveInputs || session) && (
               <div className="mt-6 overflow-hidden rounded-[1.8rem] border border-[var(--border)] bg-[linear-gradient(180deg,rgba(239,244,251,0.74),rgba(252,253,255,0.98))]">
                 <div className="flex flex-col gap-4 border-b border-[var(--border)] px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
                   <div className="flex items-start gap-3">
@@ -728,7 +881,7 @@ export function HouseVoiceApp() {
                       <p className="mt-1 text-sm text-slate-600">
                         {session
                           ? `${session.materials.length} source${session.materials.length === 1 ? "" : "s"} in scope, with visible grounding on every answer.`
-                          : "Session-based answers grounded in PDFs and pasted material."}
+                          : `Session-based answers grounded in ${selectedSourceLabel}.`}
                       </p>
                     </div>
                   </div>
@@ -776,9 +929,8 @@ export function HouseVoiceApp() {
                     }`}
                   >
                     <div className="space-y-4">
-                      {messages.length > 0 && (
-                        messages.map((message) => <MessageBubble key={message.id} message={message} />)
-                      )}
+                      {messages.length > 0 &&
+                        messages.map((message) => <MessageBubble key={message.id} message={message} />)}
 
                       {isReplying && (
                         <div className="flex justify-start">
@@ -830,7 +982,7 @@ export function HouseVoiceApp() {
                   </div>
                 </div>
               </div>
-              )}
+            )}
           </div>
 
           {session && (
