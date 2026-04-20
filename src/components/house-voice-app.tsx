@@ -714,7 +714,7 @@ export function HouseVoiceApp() {
                     messages.length > 0
                       ? "min-h-[24rem]"
                       : session
-                        ? "min-h-[9rem]"
+                        ? "min-h-0 py-2"
                         : "min-h-[4.5rem]"
                   }`}
                 >
