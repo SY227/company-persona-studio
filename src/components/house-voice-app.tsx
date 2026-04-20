@@ -388,7 +388,7 @@ export function HouseVoiceApp() {
                 Operator-grade company persona demo, grounded in the source pack.
               </div>
               <h1 className="max-w-4xl text-5xl font-semibold leading-[1.01] tracking-[-0.05em] text-slate-950 sm:text-6xl">
-                Turn company material into a grounded company chat demo that feels immediately real.
+                Turn company documents into a specific persona chatbot in seconds.
               </h1>
               <p className="mt-6 max-w-3xl text-lg leading-8 text-slate-600 sm:text-xl">
                 Bring your own company materials first. This session-based prototype distills a grounded company persona from the source pack, then lets you test it live in chat.
