@@ -80,11 +80,11 @@ type SourceInputMode = "files" | "paste";
 
 function toneNote(mode: SessionPayload["mode"] | ChatResponsePayload["mode"] | null) {
   if (mode === "live") {
-    return "Live model, grounded to the current session.";
+    return "Live, grounded to the current session.";
   }
 
   if (mode === "demo") {
-    return "Fallback mode, still grounded to the current session.";
+    return "Fallback, still grounded to the current session.";
   }
 
   return "Session based only.";
@@ -914,7 +914,7 @@ export function HouseVoiceApp() {
                     </div>
                   </div>
                   <div className="flex flex-wrap gap-2">
-                    <CompactTag>{session ? (session.mode === "live" ? "Live model" : "Local fallback") : "Session based"}</CompactTag>
+                    <CompactTag>{session ? (session.mode === "live" ? "Live" : "Fallback") : "Session based"}</CompactTag>
                     <CompactTag>{session ? `${session.chunks.length} excerpts` : "No persistence"}</CompactTag>
                     {session && <CompactTag>No fine-tuning</CompactTag>}
                   </div>
@@ -1032,7 +1032,7 @@ export function HouseVoiceApp() {
                       </p>
                     </div>
                     <div className="flex flex-wrap gap-2">
-                      <Pill>{session.mode === "live" ? "Live model" : "Fallback mode"}</Pill>
+                      <Pill>{session.mode === "live" ? "Live" : "Fallback"}</Pill>
                       <Pill>{isSampleSession ? "Example case" : "Custom source pack"}</Pill>
                     </div>
                   </div>
@@ -1139,7 +1139,7 @@ function MessageBubble({
                 }`}
                 title={message.debugReason || undefined}
               >
-                {message.mode === "live" ? "Gemini live" : "Fallback"}
+                {message.mode === "live" ? "Live" : "Fallback"}
               </span>
             )}
             {groundingLabels.length > 0 && <span>Grounded in</span>}

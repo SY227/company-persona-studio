@@ -1,6 +1,6 @@
-# House Voice
+# Company Persona Studio
 
-House Voice is a local Next.js prototype for turning company PDFs or pasted material into a premium, session-based grounded company chat experience.
+Company Persona Studio is a local Next.js prototype for turning company PDFs or pasted material into a premium, session-based grounded company chat experience.
 
 It is intentionally scoped as a fast session-based prototype:
 - upload PDFs or paste writing samples for a given run
