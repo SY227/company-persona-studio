@@ -578,7 +578,7 @@ export function HouseVoiceApp() {
                     return (
                       <div
                         key={step}
-                        className={`flex-1 rounded-[1.35rem] border p-3 transition ${
+                        className={`relative flex-1 rounded-[1.35rem] border p-3 transition ${
                           state === "completed"
                             ? "border-[var(--flow-complete-border)] bg-[var(--flow-complete-bg)] shadow-[0_14px_34px_rgba(24,58,117,0.06)]"
                             : state === "running"
@@ -586,6 +586,17 @@ export function HouseVoiceApp() {
                               : "border-[var(--border)] bg-white/78"
                         }`}
                       >
+                        <div
+                          className={`absolute right-3 top-3 text-[11px] font-medium ${
+                            state === "completed"
+                              ? "text-[var(--blue-strong)]/70"
+                              : state === "running"
+                                ? "flow-running-status text-[var(--blue-strong)]/80"
+                                : "text-slate-400"
+                          }`}
+                        >
+                          {statusLabel}
+                        </div>
                         <div className="flex items-start gap-3">
                           <div
                             className={`flex h-8.5 w-8.5 shrink-0 items-center justify-center rounded-2xl text-[var(--blue-strong)] ${
@@ -598,25 +609,12 @@ export function HouseVoiceApp() {
                           >
                             <Icon className="h-4 w-4" />
                           </div>
-                          <div className="min-w-0">
-                            <div className="flex items-center justify-between gap-3">
-                              <div className="flex items-center gap-2 text-sm font-semibold text-slate-900">
-                                <span className="text-[11px] uppercase tracking-[0.18em] text-slate-400">
-                                  {step}
-                                </span>
-                                <span>{title}</span>
-                              </div>
-                              <div
-                                className={`text-[11px] font-medium ${
-                                  state === "completed"
-                                    ? "text-[var(--blue-strong)]/70"
-                                    : state === "running"
-                                      ? "flow-running-status text-[var(--blue-strong)]/80"
-                                      : "text-slate-400"
-                                }`}
-                              >
-                                {statusLabel}
-                              </div>
+                          <div className="min-w-0 pr-20">
+                            <div className="flex items-center gap-2 text-sm font-semibold text-slate-900">
+                              <span className="text-[11px] uppercase tracking-[0.18em] text-slate-400">
+                                {step}
+                              </span>
+                              <span>{title}</span>
                             </div>
                             <p className="mt-0.5 text-xs leading-5 text-slate-500">{copy}</p>
                           </div>
