@@ -390,258 +390,194 @@ export function HouseVoiceApp() {
           </div>
         </section>
 
-        <section
-          id="studio"
-          className={`mt-0 grid gap-8 ${
-            session ? "lg:grid-cols-[0.82fr_1.18fr]" : "lg:grid-cols-[0.94fr_1.06fr]"
-          }`}
-        >
-          <div className="space-y-6">
-
-            <div className="rounded-[2rem] border border-[var(--border)] bg-white p-6 shadow-[0_18px_50px_rgba(15,23,42,0.06)]">
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <div className="text-sm font-semibold tracking-[0.18em] text-[var(--blue-strong)] uppercase">
-                    Bring your own materials
-                  </div>
-                  <h2 className="mt-2 text-2xl font-semibold tracking-[-0.03em] text-slate-950">
-                    Upload PDFs or paste company writing
-                  </h2>
-                  <p className="mt-2 text-sm leading-6 text-slate-600">
-                    Use decks, brand guidelines, founder notes, customer emails, internal explainers, or support macros. Everything here stays scoped to this session.
-                  </p>
+        <section id="studio" className="mt-0 max-w-6xl space-y-6">
+          <div className="rounded-[2rem] border border-[var(--border)] bg-white p-6 shadow-[0_18px_50px_rgba(15,23,42,0.06)]">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+              <div>
+                <div className="text-sm font-semibold tracking-[0.18em] text-[var(--blue-strong)] uppercase">
+                  Bring your own materials
                 </div>
-                <div className="rounded-full border border-[var(--border)] bg-slate-50 px-3 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
-                  Session only
-                </div>
-              </div>
-
-              <div
-                onDragOver={(event) => {
-                  event.preventDefault();
-                  setIsDragging(true);
-                }}
-                onDragLeave={() => setIsDragging(false)}
-                onDrop={(event) => {
-                  event.preventDefault();
-                  setIsDragging(false);
-                  onFilesSelected(Array.from(event.dataTransfer.files));
-                }}
-                className={`mt-6 rounded-[1.6rem] border border-dashed p-6 text-center transition ${
-                  isDragging
-                    ? "border-[var(--blue-strong)] bg-[rgba(239,244,251,0.95)]"
-                    : "border-[var(--border)] bg-[var(--surface-muted)]"
-                }`}
-              >
-                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-white text-[var(--blue-strong)] shadow-[0_12px_30px_rgba(15,23,42,0.06)]">
-                  <Upload className="h-6 w-6" />
-                </div>
-                <div className="mt-4 text-lg font-semibold text-slate-900">
-                  Drop PDFs here
-                </div>
-                <p className="mt-2 text-sm leading-6 text-slate-600">
-                  Multi-file upload is supported. The extractor reads text from each PDF and folds it into the current session.
+                <h2 className="mt-2 text-2xl font-semibold tracking-[-0.03em] text-slate-950">
+                  Upload PDFs or paste company writing
+                </h2>
+                <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">
+                  Use decks, brand guidelines, founder notes, customer emails, internal explainers, or support macros. Everything here stays scoped to this session.
                 </p>
-                <button
-                  type="button"
-                  onClick={() => fileInputRef.current?.click()}
-                  className="mt-4 rounded-full border border-[var(--border)] bg-white px-4 py-2 text-sm font-medium text-slate-800 transition hover:border-[var(--blue-strong)] hover:text-[var(--blue-strong)]"
-                >
-                  Choose PDFs
-                </button>
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="application/pdf,.pdf"
-                  multiple
-                  className="hidden"
-                  onChange={(event) => onFilesSelected(Array.from(event.target.files ?? []))}
-                />
               </div>
+              <div className="rounded-full border border-[var(--border)] bg-slate-50 px-3 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+                Session only
+              </div>
+            </div>
 
-              {files.length > 0 && (
-                <div className="mt-4 rounded-[1.5rem] border border-[var(--border)] bg-slate-50 p-4">
-                  <div className="flex flex-wrap items-center justify-between gap-3">
-                    <div className="text-sm font-semibold text-slate-900">
-                      {files.length} PDF{files.length === 1 ? "" : "s"} loaded
+            <div className="mt-6 grid gap-6 lg:grid-cols-[1.02fr_0.98fr] lg:items-start">
+              <div className="space-y-6">
+                <div
+                  onDragOver={(event) => {
+                    event.preventDefault();
+                    setIsDragging(true);
+                  }}
+                  onDragLeave={() => setIsDragging(false)}
+                  onDrop={(event) => {
+                    event.preventDefault();
+                    setIsDragging(false);
+                    onFilesSelected(Array.from(event.dataTransfer.files));
+                  }}
+                  className={`rounded-[1.6rem] border border-dashed p-6 text-center transition ${
+                    isDragging
+                      ? "border-[var(--blue-strong)] bg-[rgba(239,244,251,0.95)]"
+                      : "border-[var(--border)] bg-[var(--surface-muted)]"
+                  }`}
+                >
+                  <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-white text-[var(--blue-strong)] shadow-[0_12px_30px_rgba(15,23,42,0.06)]">
+                    <Upload className="h-6 w-6" />
+                  </div>
+                  <div className="mt-4 text-lg font-semibold text-slate-900">Drop PDFs here</div>
+                  <p className="mt-2 text-sm leading-6 text-slate-600">
+                    Multi-file upload is supported. The extractor reads text from each PDF and folds it into the current session.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="mt-4 rounded-full border border-[var(--border)] bg-white px-4 py-2 text-sm font-medium text-slate-800 transition hover:border-[var(--blue-strong)] hover:text-[var(--blue-strong)]"
+                  >
+                    Choose PDFs
+                  </button>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="application/pdf,.pdf"
+                    multiple
+                    className="hidden"
+                    onChange={(event) => onFilesSelected(Array.from(event.target.files ?? []))}
+                  />
+                </div>
+
+                {files.length > 0 && (
+                  <div className="rounded-[1.5rem] border border-[var(--border)] bg-slate-50 p-4">
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                      <div className="text-sm font-semibold text-slate-900">
+                        {files.length} PDF{files.length === 1 ? "" : "s"} loaded
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setFiles([])}
+                        className="text-sm font-medium text-slate-500 transition hover:text-slate-800"
+                      >
+                        Clear files
+                      </button>
+                    </div>
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      {files.map((file) => (
+                        <span
+                          key={`${file.name}-${file.size}`}
+                          className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700"
+                        >
+                          <FileText className="h-4 w-4 text-[var(--blue-strong)]" />
+                          {file.name}
+                          <button
+                            type="button"
+                            onClick={() => removeFile(file)}
+                            className="ml-1 text-slate-400 transition hover:text-slate-700"
+                            aria-label={`Remove ${file.name}`}
+                          >
+                            ×
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <div className="rounded-[1.6rem] border border-[var(--border)] bg-[linear-gradient(180deg,rgba(239,244,251,0.78),rgba(255,255,255,0.98))] p-5">
+                  <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                    <div>
+                      <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                        Optional example case
+                      </div>
+                      <div className="mt-2 text-lg font-semibold tracking-[-0.02em] text-slate-950">
+                        {EXAMPLE_CASE.companyName}
+                      </div>
+                      <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
+                        {EXAMPLE_CASE.headline} Use it if you want an immediate demo before loading your own source pack.
+                      </p>
                     </div>
                     <button
                       type="button"
-                      onClick={() => setFiles([])}
-                      className="text-sm font-medium text-slate-500 transition hover:text-slate-800"
+                      onClick={() => void createSession({ useSample: true })}
+                      disabled={isCreatingSession}
+                      className="inline-flex items-center justify-center rounded-full border border-[var(--border)] bg-white px-4 py-2 text-sm font-semibold text-slate-800 transition hover:border-[var(--blue-strong)] hover:text-[var(--blue-strong)] disabled:cursor-not-allowed disabled:opacity-60"
                     >
-                      Clear files
+                      {isCreatingSession ? (
+                        <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
+                      ) : (
+                        <Sparkles className="mr-2 h-4 w-4" />
+                      )}
+                      Try example case
                     </button>
                   </div>
-                  <div className="mt-3 flex flex-wrap gap-2">
-                    {files.map((file) => (
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    {EXAMPLE_CASE.sourceLabels.map((label) => (
                       <span
-                        key={`${file.name}-${file.size}`}
-                        className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700"
-                      >
-                        <FileText className="h-4 w-4 text-[var(--blue-strong)]" />
-                        {file.name}
-                        <button
-                          type="button"
-                          onClick={() => removeFile(file)}
-                          className="ml-1 text-slate-400 transition hover:text-slate-700"
-                          aria-label={`Remove ${file.name}`}
-                        >
-                          ×
-                        </button>
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              <div className="mt-6 rounded-[1.6rem] border border-[var(--border)] bg-[linear-gradient(180deg,rgba(239,244,251,0.78),rgba(255,255,255,0.98))] p-5">
-                <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-                  <div>
-                    <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
-                      Optional example case
-                    </div>
-                    <div className="mt-2 text-lg font-semibold tracking-[-0.02em] text-slate-950">
-                      {EXAMPLE_CASE.companyName}
-                    </div>
-                    <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
-                      {EXAMPLE_CASE.headline} Use it if you want an immediate demo before loading your own source pack.
-                    </p>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => void createSession({ useSample: true })}
-                    disabled={isCreatingSession}
-                    className="inline-flex items-center justify-center rounded-full border border-[var(--border)] bg-white px-4 py-2 text-sm font-semibold text-slate-800 transition hover:border-[var(--blue-strong)] hover:text-[var(--blue-strong)] disabled:cursor-not-allowed disabled:opacity-60"
-                  >
-                    {isCreatingSession ? (
-                      <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
-                    ) : (
-                      <Sparkles className="mr-2 h-4 w-4" />
-                    )}
-                    Try example case
-                  </button>
-                </div>
-                <div className="mt-4 flex flex-wrap gap-2">
-                  {EXAMPLE_CASE.sourceLabels.map((label) => (
-                    <span
-                      key={label}
-                      className="rounded-full border border-white bg-white px-3 py-2 text-xs font-medium text-slate-700 shadow-sm"
-                    >
-                      {label}
-                    </span>
-                  ))}
-                </div>
-              </div>
-
-              <div className="mt-6">
-                <div className="mb-3 flex items-center justify-between gap-3">
-                  <div className="text-sm font-semibold text-slate-900">Paste writing samples</div>
-                  <div className="text-xs text-slate-500">
-                    Useful for emails, founder notes, brand language, and support replies
-                  </div>
-                </div>
-                <textarea
-                  value={pastedText}
-                  onChange={(event) => setPastedText(event.target.value)}
-                  placeholder={`Paste company-side writing here. Good inputs include:\n\n• product or positioning copy\n• founder letters or memos\n• sales emails\n• support macros\n• investor or board language`}
-                  className="min-h-56 w-full rounded-[1.5rem] border border-[var(--border)] bg-white px-5 py-4 text-sm leading-7 text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-[var(--blue-strong)]"
-                />
-              </div>
-
-              <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <p className="max-w-xl text-sm leading-6 text-slate-500">
-                  {isCreatingSession ? SYNTHESIS_STAGES[synthesisStageIndex] : toneNote(session?.mode ?? null)}
-                </p>
-                <button
-                  type="button"
-                  disabled={!hasInputs || isCreatingSession}
-                  onClick={() => void createSession()}
-                  className="inline-flex items-center justify-center rounded-full bg-[var(--blue-strong)] px-5 py-3 text-sm font-semibold text-white shadow-[0_16px_40px_rgba(24,58,117,0.2)] transition hover:bg-[var(--blue-deep)] disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  {isCreatingSession ? (
-                    <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
-                  ) : (
-                    <Sparkles className="mr-2 h-4 w-4" />
-                  )}
-                  Build grounded chat demo
-                </button>
-              </div>
-
-              {notice && (
-                <div className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-                  {notice}
-                </div>
-              )}
-            </div>
-
-            {session && (
-              <div className="rounded-[2rem] border border-[var(--border)] bg-white p-6 shadow-[0_18px_50px_rgba(15,23,42,0.06)]">
-                <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-                  <div>
-                    <div className="text-sm font-semibold tracking-[0.18em] text-[var(--blue-strong)] uppercase">
-                      Company persona
-                    </div>
-                    <h3 className="mt-2 text-2xl font-semibold tracking-[-0.03em] text-slate-950">
-                      {session.persona.companyName}
-                    </h3>
-                    <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
-                      {session.persona.voiceSummary}
-                    </p>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    <Pill>{session.mode === "live" ? "Live model" : "Fallback mode"}</Pill>
-                    <Pill>{isSampleSession ? "Example case" : "Custom source pack"}</Pill>
-                  </div>
-                </div>
-
-                <div className="mt-5 rounded-[1.6rem] border border-[var(--border)] bg-slate-50 p-4 text-sm leading-6 text-slate-700">
-                  <span className="font-semibold text-slate-900">Session snapshot. </span>
-                  Grounded to {session.materials.length} source{session.materials.length === 1 ? "" : "s"} and {session.chunks.length} retrieved excerpt{session.chunks.length === 1 ? "" : "s"} in this session. No fine-tuning or saved company profile.
-                </div>
-
-                <div className="mt-5 rounded-[1.6rem] border border-[var(--border)] bg-white p-4">
-                  <div className="flex items-center justify-between gap-3">
-                    <div className="text-sm font-semibold text-slate-900">What carries through</div>
-                    <div className="text-xs text-slate-500">Compact summary</div>
-                  </div>
-                  <div className="mt-3 flex flex-wrap gap-2">
-                    {personaHighlights.map((item) => (
-                      <span
-                        key={item}
-                        className="rounded-full border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-medium text-slate-700"
-                      >
-                        {item}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="mt-5 rounded-[1.6rem] border border-[var(--border)] bg-[var(--surface-muted)] p-4">
-                  <div className="flex items-center justify-between gap-3">
-                    <div className="text-sm font-semibold text-slate-900">Source pack</div>
-                    <div className="text-xs text-slate-500">{session.materials.length} items</div>
-                  </div>
-                  <div className="mt-3 flex flex-wrap gap-2">
-                    {session.materials.map((material) => (
-                      <span
-                        key={material.id}
+                        key={label}
                         className="rounded-full border border-white bg-white px-3 py-2 text-xs font-medium text-slate-700 shadow-sm"
                       >
-                        {material.label}
+                        {label}
                       </span>
                     ))}
                   </div>
                 </div>
               </div>
-            )}
+
+              <div className="space-y-6">
+                <div>
+                  <div className="mb-3 flex items-center justify-between gap-3">
+                    <div className="text-sm font-semibold text-slate-900">Paste writing samples</div>
+                    <div className="text-xs text-slate-500">
+                      Useful for emails, founder notes, brand language, and support replies
+                    </div>
+                  </div>
+                  <textarea
+                    value={pastedText}
+                    onChange={(event) => setPastedText(event.target.value)}
+                    placeholder={`Paste company-side writing here. Good inputs include:\n\n• product or positioning copy\n• founder letters or memos\n• sales emails\n• support macros\n• investor or board language`}
+                    className="min-h-[26rem] w-full rounded-[1.5rem] border border-[var(--border)] bg-white px-5 py-4 text-sm leading-7 text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-[var(--blue-strong)]"
+                  />
+                </div>
+
+                <div className="rounded-[1.6rem] border border-[var(--border)] bg-slate-50 p-5">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <p className="max-w-2xl text-sm leading-6 text-slate-500">
+                      {isCreatingSession ? SYNTHESIS_STAGES[synthesisStageIndex] : toneNote(session?.mode ?? null)}
+                    </p>
+                    <button
+                      type="button"
+                      disabled={!hasInputs || isCreatingSession}
+                      onClick={() => void createSession()}
+                      className="inline-flex items-center justify-center rounded-full bg-[var(--blue-strong)] px-5 py-3 text-sm font-semibold text-white shadow-[0_16px_40px_rgba(24,58,117,0.2)] transition hover:bg-[var(--blue-deep)] disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      {isCreatingSession ? (
+                        <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
+                      ) : (
+                        <Sparkles className="mr-2 h-4 w-4" />
+                      )}
+                      Build grounded chat demo
+                    </button>
+                  </div>
+
+                  {notice && (
+                    <div className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+                      {notice}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
           </div>
 
-          <div className="space-y-6">
-            <div
-              id="chat-demo"
-              className="rounded-[2rem] border border-[var(--border)] bg-white p-6 shadow-[0_22px_56px_rgba(15,23,42,0.08)]"
-            >
+          <div
+            id="chat-demo"
+            className="rounded-[2rem] border border-[var(--border)] bg-white p-6 shadow-[0_22px_56px_rgba(15,23,42,0.08)]"
+          >
               <div className="flex flex-col gap-4 border-b border-[var(--border)] pb-5 sm:flex-row sm:items-start sm:justify-between">
                 <div>
                   <div className="text-sm font-semibold tracking-[0.18em] text-[var(--blue-strong)] uppercase">
@@ -803,9 +739,72 @@ export function HouseVoiceApp() {
                   </button>
                 </div>
               </div>
-            </div>
-
           </div>
+
+          {session && (
+            <div className="rounded-[2rem] border border-[var(--border)] bg-white p-6 shadow-[0_18px_50px_rgba(15,23,42,0.06)]">
+              <div className="grid gap-6 lg:grid-cols-[1.12fr_0.88fr] lg:items-start">
+                <div>
+                  <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                    <div>
+                      <div className="text-sm font-semibold tracking-[0.18em] text-[var(--blue-strong)] uppercase">
+                        Company persona
+                      </div>
+                      <h3 className="mt-2 text-2xl font-semibold tracking-[-0.03em] text-slate-950">
+                        {session.persona.companyName}
+                      </h3>
+                      <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">
+                        {session.persona.voiceSummary}
+                      </p>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      <Pill>{session.mode === "live" ? "Live model" : "Fallback mode"}</Pill>
+                      <Pill>{isSampleSession ? "Example case" : "Custom source pack"}</Pill>
+                    </div>
+                  </div>
+
+                  <div className="mt-5 rounded-[1.6rem] border border-[var(--border)] bg-slate-50 p-4 text-sm leading-6 text-slate-700">
+                    <span className="font-semibold text-slate-900">Session snapshot. </span>
+                    Grounded to {session.materials.length} source{session.materials.length === 1 ? "" : "s"} and {session.chunks.length} retrieved excerpt{session.chunks.length === 1 ? "" : "s"} in this session. No fine-tuning or saved company profile.
+                  </div>
+
+                  <div className="mt-5 rounded-[1.6rem] border border-[var(--border)] bg-white p-4">
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="text-sm font-semibold text-slate-900">What carries through</div>
+                      <div className="text-xs text-slate-500">Compact summary</div>
+                    </div>
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      {personaHighlights.map((item) => (
+                        <span
+                          key={item}
+                          className="rounded-full border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-medium text-slate-700"
+                        >
+                          {item}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="rounded-[1.6rem] border border-[var(--border)] bg-[var(--surface-muted)] p-4">
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="text-sm font-semibold text-slate-900">Source pack</div>
+                    <div className="text-xs text-slate-500">{session.materials.length} items</div>
+                  </div>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {session.materials.map((material) => (
+                      <span
+                        key={material.id}
+                        className="rounded-full border border-white bg-white px-3 py-2 text-xs font-medium text-slate-700 shadow-sm"
+                      >
+                        {material.label}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         </section>
       </div>
     </div>
