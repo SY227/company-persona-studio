@@ -340,7 +340,7 @@ export function HouseVoiceApp() {
   return (
     <div className="min-h-screen bg-[var(--background)] text-slate-950">
       <div className="mx-auto max-w-7xl px-6 pb-20 pt-6 sm:px-8 lg:px-10">
-        <section className="pb-1 pt-4">
+        <section className="pb-4 pt-4">
           <div className="grid max-w-6xl gap-8 py-1 lg:grid-cols-[minmax(0,1fr)_18rem] lg:items-start lg:gap-10">
             <div>
               <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--surface-muted)] px-4 py-2 text-sm text-slate-600 shadow-[0_8px_20px_rgba(24,58,117,0.06)]">
@@ -353,7 +353,7 @@ export function HouseVoiceApp() {
               <p className="mt-6 max-w-3xl text-lg leading-8 text-slate-600 sm:text-xl">
                 Bring your own company materials first. This session-based prototype distills a grounded company persona from the source pack, then lets you test it live in chat.
               </p>
-              <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+              <div className="mt-7 flex flex-col gap-3 sm:flex-row">
                 <button
                   type="button"
                   onClick={scrollToStudio}
@@ -395,7 +395,7 @@ export function HouseVoiceApp() {
           </div>
         </section>
 
-        <section id="studio" className="-mt-1 max-w-6xl space-y-6">
+        <section id="studio" className="mt-1 max-w-6xl space-y-6">
           <div className="rounded-[2rem] border border-[var(--border)] bg-white p-6 shadow-[0_18px_50px_rgba(15,23,42,0.06)]">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
               <div>
