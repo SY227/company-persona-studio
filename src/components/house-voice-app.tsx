@@ -2,7 +2,6 @@
 
 import { type ReactNode, useEffect, useMemo, useRef, useState } from "react";
 import {
-  ArrowUpRight,
   FileText,
   LoaderCircle,
   MessageSquareText,
@@ -353,29 +352,6 @@ export function HouseVoiceApp() {
               <p className="mt-6 max-w-3xl text-lg leading-8 text-slate-600 sm:text-xl">
                 Bring your own company materials first. This session-based prototype distills a grounded company persona from the source pack, then lets you test it live in chat.
               </p>
-              <div className="mt-7 flex flex-col gap-3 sm:flex-row">
-                <button
-                  type="button"
-                  onClick={scrollToStudio}
-                  className="inline-flex items-center justify-center rounded-full bg-[var(--blue-strong)] px-6 py-3 text-sm font-semibold text-white shadow-[0_18px_44px_rgba(24,58,117,0.24)] transition hover:bg-[var(--blue-deep)]"
-                >
-                  Bring my own materials
-                  <ArrowUpRight className="ml-2 h-4 w-4" />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => void createSession({ useSample: true })}
-                  disabled={isCreatingSession}
-                  className="inline-flex items-center justify-center rounded-full border border-[var(--border)] bg-white px-6 py-3 text-sm font-semibold text-slate-800 transition hover:border-[var(--blue-strong)] hover:text-[var(--blue-strong)] disabled:cursor-not-allowed disabled:opacity-60"
-                >
-                  {isCreatingSession ? (
-                    <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
-                  ) : (
-                    <Sparkles className="mr-2 h-4 w-4" />
-                  )}
-                  Try example case
-                </button>
-              </div>
             </div>
 
             <div className="space-y-3 lg:pt-1">
